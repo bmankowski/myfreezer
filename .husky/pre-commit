@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # Run lint-staged (linting and formatting on staged files only)
 # This allows WIP commits but keeps code formatted
 npx lint-staged
