@@ -1,12 +1,12 @@
 <db-plan>
-@7-database-structure.md
+@.ai/documents/7-database-structure.md
 <db-plan>
 <prd>
-@3-prd.md
+@.ai/documents/3-prd.md
 </prd>
 
 <tech-stack>
-@4-tech-stack.md
+@.ai/documents/tech-stack.md
 </tech-stack>
 
 Jesteś doświadczonym architektem API, którego zadaniem jest stworzenie kompleksowego planu API REST. Twój plan będzie oparty na podanym schemacie bazy danych, dokumencie wymagań produktu (PRD) i stacku technologicznym podanym powyżej. Uważnie przejrzyj dane wejściowe i wykonaj następujące kroki:
@@ -86,5 +86,5 @@ Dla każdego zasobu podaj:
 
 Upewnij się, że Twój plan jest kompleksowy, dobrze skonstruowany i odnosi się do wszystkich aspektów materiałów wejściowych. Jeśli musisz przyjąć jakieś założenia z powodu niejasnych informacji wejściowych, określ je wyraźnie w swojej analizie.
 
-Końcowy wynik powinien składać się wyłącznie z planu API w formacie markdown w języku angielskim, który zapiszesz w .ai/10xTranslationFactory-documents/api-plan.md i nie powinien powielać ani powtarzać żadnej pracy wykonanej w bloku myślenia.
+Końcowy wynik powinien składać się wyłącznie z planu API w formacie markdown w języku angielskim, który zapiszesz w .ai/documents/8-api-plan.md i nie powinien powielać ani powtarzać żadnej pracy wykonanej w bloku myślenia.
 ```

@@ -4,12 +4,12 @@ First, carefully review the following input data:
 
 1. Database models:
    <database_models>
-   @7-database-strucutre.md
+   @.ai/documents/7-database-structure.md
    </database_models>
 
 2. API Plan (including defined DTO):
    <api_plan>
-   @8-api-plan.md
+   @.ai/documents/8-api-plan.md
    </api_plan>
 
 Your task is to create TypeScript type definitions for the DTOs and Command Models specified in the API plan, ensuring that they are derived from the database models. Follow these steps:
