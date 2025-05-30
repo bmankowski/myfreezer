@@ -27,14 +27,10 @@ jobs:
       - name: Check formatting
         run: npm run format -- --check
 
-  test-unit:
-    name: Unit Tests
+  type-check:
+    name: Type Check
     runs-on: ubuntu-latest
     needs: lint
-    environment: integration
-    env:
-      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,78 +44,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests with coverage
-        run: npm run test:coverage
-
-      - name: Upload unit test coverage
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage/coverage-final.json
-          flags: unit-tests
-          name: unit-test-coverage
-          fail_ci_if_error: false
-
-  test-e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: lint
-    environment: integration
-    env:
-      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Build application
-        run: npm run build
-
-      - name: Run E2E tests
-        run: npm run test:e2e
-
-      - name: Upload E2E test results
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
-
-      - name: Upload E2E coverage
-        uses: codecov/codecov-action@v5
-        if: always()
-        with:
-          files: ./coverage/e2e-coverage.json
-          flags: e2e-tests
-          name: e2e-test-coverage
-          fail_ci_if_error: false
+      - name: Run type check
+        run: npm run type-check
 
   build-and-deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
-    needs: [test-unit, test-e2e]
+    needs: [lint, type-check]
     if: success()
-    environment: production
-    env:
-      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

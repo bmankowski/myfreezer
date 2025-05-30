@@ -1,0 +1,10 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run full lint check (not just staged files)
+npm run lint
+
+# Ensure build works
+npm run build
+
+echo "✅ All checks passed! Pushing to remote..." 
