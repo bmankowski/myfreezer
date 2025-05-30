@@ -141,9 +141,9 @@ Kryteria akceptacji:
 - Na ekranie widoczny jest floating button mikrofonu
 - Po kliknięciu system aktywuje nasłuchiwanie (max 30s)
 - System wyświetla wizualny feedback podczas nagrywania
-- Po wypowiedzeniu "dodaj mleko do pierwszej półki" system rozpoznaje polecenie
+- Po wypowiedzeniu "dodaj dwa kartony mleka do pierwszej półki" system rozpoznaje polecenie
 - Jeśli brak lokalizacji, system pyta głosowo o szczegóły
-- Produkt zostaje dodany do odpowiedniej półki z ilością 1
+- Produkt zostaje dodany do odpowiedniej półki w odpowiedniej ilości tutaj nazwa="mleko" ilość="2 kartony"
 - System wyświetla toast z potwierdzeniem operacji
 
 ### US-005: Głosowe usuwanie produktu
@@ -292,7 +292,7 @@ Kryteria akceptacji:
 Jako użytkownik chcę móc używać różnych nazw tego samego produktu.
 
 Kryteria akceptacji:
-- AI rozpoznaje "pomidory", "pomidor", "pomidorki" jako ten sam produkt
+- AI rozpoznaje "pomidory", "pomidor", "pomidorki" jako ten sam produkt, dlatego powinno go zapisywać w bazie w mianowniku liczby pojednyczej
 - System inteligentnie dopasowuje podobne nazwy
 - Użytkownik może używać naturalnego języka
 - AI uwzględnia kontekst istniejących produktów użytkownika
@@ -309,27 +309,7 @@ Kryteria akceptacji:
 - System informuje o zakończeniu sesji
 
 ## 6. Metryki Sukcesu
-
-### Metryka podstawowa
-Zadowolenie użytkowników mierzone przez:
-- Częstotliwość korzystania z aplikacji
-- Czas spędzony w aplikacji
-- Liczba wykonanych poleceń głosowych dziennie
-
-### Metryki funkcjonalne
-- Dokładność rozpoznawania poleceń głosowych (target: >90%)
-- Czas odpowiedzi systemu na polecenia (target: <3 sekundy)
-- Częstotliwość błędów AI w interpretacji poleceń (target: <5%)
-
-### Metryki użyteczności
-- Łatwość pierwszego użycia (onboarding completion rate)
-- Retencja użytkowników po tygodniu (target: >60%)
-- Średnia liczba produktów na użytkownika (wskaźnik adopcji)
-
-### Metryki techniczne
-- Uptime aplikacji (target: >99%)
-- Czas ładowania strony (target: <2 sekundy)
-- Błędy związane z integracją Supabase (target: <1%)
+Matryki nie będą mierzone dla MVP
 
 ### Definicja sukcesu MVP
 MVP zostanie uznane za sukces, jeśli:

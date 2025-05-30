@@ -3,11 +3,11 @@ You are an AI assistant tasked with helping plan a PostgreSQL database schema fo
 Please review the following inputs carefully:
 
 <product_requirements>  
-@3-prd.md <- reference to the product requirements document  
+.ai/documents/3-prd.md <- reference to the product requirements document  
 </product_requirements>
 
 <tech_stack>  
-@4-tech-stack.md <- reference to the technology stack document  
+.ai/documents/4-tech-stack.md <- reference to the technology stack document  
 </tech_stack>
 
 Analyze the provided information with a focus on database design-relevant aspects. Consider the following:
