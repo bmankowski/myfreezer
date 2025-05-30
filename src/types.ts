@@ -281,3 +281,134 @@ export interface CreateItemEntity extends AddItemCommandDTO {
 export type UpdateContainerEntity = Partial<Pick<Container, "name" | "type">>;
 export type UpdateShelfEntity = Partial<Pick<Shelf, "name" | "position">>;
 export type UpdateItemEntity = Partial<Pick<Item, "name" | "quantity" | "shelf_id">>;
+
+// ============================================================================
+// Authentication DTOs and Commands
+// ============================================================================
+
+/** User profile information */
+export interface UserProfileDTO {
+  user_id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  email_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Registration command */
+export interface RegisterCommandDTO {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+}
+
+/** Registration response */
+export interface RegisterResponseDTO {
+  user: Pick<UserProfileDTO, "user_id" | "email" | "firstName" | "lastName">;
+  message: string;
+  email_confirmation_required: boolean;
+}
+
+/** Login command */
+export interface LoginCommandDTO {
+  email: string;
+  password: string;
+}
+
+/** Login response */
+export interface LoginResponseDTO {
+  user: Pick<UserProfileDTO, "user_id" | "email" | "firstName" | "lastName">;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: "Bearer";
+}
+
+/** Logout response */
+export interface LogoutResponseDTO {
+  message: string;
+}
+
+/** Password reset request command */
+export interface ResetPasswordRequestCommandDTO {
+  email: string;
+}
+
+/** Password reset request response */
+export interface ResetPasswordRequestResponseDTO {
+  message: string;
+}
+
+/** Password reset confirm command */
+export interface ResetPasswordConfirmCommandDTO {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
+/** Password reset confirm response */
+export interface ResetPasswordConfirmResponseDTO {
+  message: string;
+}
+
+/** Change password command (for authenticated users) */
+export interface ChangePasswordCommandDTO {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+/** Change password response */
+export interface ChangePasswordResponseDTO {
+  message: string;
+}
+
+/** Update profile command */
+export interface UpdateProfileCommandDTO {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+/** Update profile response */
+export interface UpdateProfileResponseDTO {
+  user: Pick<UserProfileDTO, "user_id" | "email" | "firstName" | "lastName">;
+  message: string;
+}
+
+/** Email verification command */
+export interface VerifyEmailCommandDTO {
+  token: string;
+}
+
+/** Email verification response */
+export interface VerifyEmailResponseDTO {
+  message: string;
+}
+
+/** Refresh token command */
+export interface RefreshTokenCommandDTO {
+  refreshToken: string;
+}
+
+/** Refresh token response */
+export interface RefreshTokenResponseDTO {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: "Bearer";
+}
+
+/** Resend verification email command */
+export interface ResendVerificationCommandDTO {
+  email: string;
+}
+
+/** Resend verification email response */
+export interface ResendVerificationResponseDTO {
+  message: string;
+}

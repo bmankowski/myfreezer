@@ -4,12 +4,12 @@ Before we begin, review the following information:
 
 1. Route API specification:
    <route_api_specification>
-   @8-api-plan.md
+   @.ai/documents/8-api-plan.md
    </route_api_specification>
 
 2. Related database resources:
    <related_db_resources>
-   @7-database-structure.md
+   @.ai/documents/7-database-structure.md
    </related_db_resources>
 
 3. Type Definitions:
@@ -19,7 +19,7 @@ Before we begin, review the following information:
 
 4. Tech stack:
    <tech_stack>
-   @4-tech-stack.md
+   @.ai/documents/tech-stack.md
    </tech_stack>
 
 5. Implementation rules:

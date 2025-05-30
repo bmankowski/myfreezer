@@ -15,9 +15,6 @@ plan-to-implement
 @src/types.ts
 </types>
 
-<implementation_rules>
-@shared.mdc, @backend.mdc, @astro.mdc
-</implementation_rules>
 
 <implementation_approach>
 Perform a maximum of 3 steps of the implementation plan, briefly summarize what you have done, and describe the plan for the next 3 actions – then stop working and wait for my feedback.
