@@ -1,0 +1,21 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Jesteś specjalistą GitHub Actions w stacku @.ai/documents/4-tech-stack.md  @package.json
+
+Utwórz scenariusz "push.yml" na podstawie @.cursor/rules/github-action.mdc
+
+Workflow:
+Scenariusz "push.yml" powinien działać następująco:
+
+- Lintowanie kodu
+- Następnie testy
+- Finalnie - build i deployment
+
+Dodatkowe uwagi:
+- buil i deployment uruchamia się tylko kiedy lintowanie i testy przejdą poprawnie
+- w jobie e2e pobieraj przeglądarki wg @playwright.config.ts 
+- w jobie e2e ustaw środowisko "integration" i zmienne z sekretów wg @.env.example 
+- zbieraj coverage unit testów i testów e2e
