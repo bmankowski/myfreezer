@@ -89,4 +89,3 @@ Remember to fill out each section with detailed, relevant information based on t
 
 The final output should consist only of the PRD, formatted in markdown as specified, and saved in the file .ai/documents/prd.md
 It should be in polish.
-
