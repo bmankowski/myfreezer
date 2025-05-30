@@ -87,4 +87,6 @@ Prepare the PRD using the following structure:
 
 Remember to fill out each section with detailed, relevant information based on the project description and our clarifying questions. Make sure the PRD is comprehensive, clear, and includes all essential information needed for further product development.
 
-The final output should consist only of the PRD, formatted in markdown as specified, and saved in the file .ai/prd.md.
+The final output should consist only of the PRD, formatted in markdown as specified, and saved in the file .ai/documents/prd.md
+It should be in polish.
+
