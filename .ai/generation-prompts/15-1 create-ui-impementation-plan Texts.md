@@ -6,28 +6,33 @@ The plan should be **comprehensive** and **clear enough** for another frontend d
 First, review the following inputs:
 
 1. Product Requirements Document (PRD):
-<prd>
-@3-prd.md
-</prd>
+   <prd>
+   @3-prd.md
+   </prd>
 
 2. View Description:
-<view_description>
+   <view_description>
+
 ### 2.4 Generate Exercise Page
+
 - Path: `/exercise/new`
 - Main Purpose: Configure and trigger AI text + question generation.
 - Key Information: Select target language, proficiency level, topic input, public/private toggle, "Generate" button.
 - Key Components: FormPanel (Selects, Input, Toggle, Button), LoadingSkeleton overlay.
 - UX/Accessibility/Security: ARIA labels on all controls, focus management to first field, protected route.
-</view_description>
+  </view_description>
 
 3. User Stories:
-<user_stories>
+   <user_stories>
+
 ### US-001
+
 **Title:** Generate Learning Text and Questions Based on Language, User Input, and Proficiency
 
 **Description:** As a language learner, I want to select my target language (English or Spanish), enter a topic of my choosing, and select my proficiency level so that I can generate a new text and practice reading comprehension in my chosen language.
 
 **Acceptance Criteria:**
+
 - User can select their target language (English or Spanish).
 - User can input a topic for text generation.
 - User can select proficiency level (beginner, intermediate, advanced).
@@ -40,17 +45,21 @@ First, review the following inputs:
 - User can generate a new text if desired.
 
 ### US-009
+
 **Title:** Set Visibility for Generated Text in English or Spanish
 **Description:** As a language learner, I want to choose whether my newly generated text (in English or Spanish) is public or private so that I can control its visibility and sharing options.
 **Acceptance Criteria:**
+
 - A toggle or option is provided during text generation to select between public and private.
 - When public, the text is displayed in community feeds; when private, it remains accessible only in my personal dashboard.
 - The system confirms the chosen visibility setting after text generation.ew
-</user_stories>
+  </user_stories>
 
 4. Endpoint Description:
-<endpoint_description>
+   <endpoint_description>
+
 #### Create Text with Questions
+
 - Method: POST
 - Path: `/api/texts`
 - Description: Generates a new text and associated questions based on user inputs
@@ -91,22 +100,22 @@ First, review the following inputs:
   ```
 - Success Codes: 201 Created
 - Error Codes: 400 Bad Request, 401 Unauthorized, 500 Internal Server Error (for AI generation failures)
-</endpoint_description>
+  </endpoint_description>
 
 5. Endpoint Implementation:
-<endpoint_implementation>
-@texts.ts
-</endpoint_implementation>
+   <endpoint_implementation>
+   @texts.ts
+   </endpoint_implementation>
 
 6. Type Definitions:
-<type_definitions>
-@types.ts
-</type_definitions>
+   <type_definitions>
+   @types.ts
+   </type_definitions>
 
 7. Tech Stack:
-<tech_stack>
-@4-tech-stack.md
-</tech_stack>
+   <tech_stack>
+   @4-tech-stack.md
+   </tech_stack>
 
 ---
 
@@ -114,6 +123,7 @@ Before creating the final implementation plan, conduct an analysis and planning 
 This section can be quite long because it is important to be thorough.
 
 In your implementation breakdown, perform the following steps:
+
 1. For each input section (PRD, User Stories, Endpoint Description, Endpoint Implementation, Type Definitions, Tech Stack):
    - Summarize the key points
    - List any requirements or constraints
@@ -169,16 +179,21 @@ The final output should be **in English** and saved in a file named `.ai/{view-n
 # View Implementation Plan: [View Name]
 
 ## 1. Overview
+
 [Short description of the view and its purpose]
 
 ## 2. View Routing
+
 [Path where the view should be available]
 
 ## 3. Component Structure
+
 [Outline of main components and their hierarchy]
 
 ## 4. Component Details
+
 ### [Component Name 1]
+
 - Component description [description]
 - Main elements: [description]
 - Supported interactions: [list]
@@ -187,27 +202,36 @@ The final output should be **in English** and saved in a file named `.ai/{view-n
 - Props: [list]
 
 ### [Component Name 2]
+
 [...]
 
 ## 5. Types
+
 [Detailed description of required types]
 
 ## 6. State Management
+
 [State management description]
 
 ## 7. API Integration
+
 [Explanation of API integration, specifying request and response types]
 
 ## 8. User Interactions
+
 [Detailed description of user interactions]
 
 ## 9. Conditions and Validation
+
 [Detailed description of validation conditions]
 
 ## 10. Error Handling
+
 [Error and edge case handling description]
 
 ## 11. Implementation Steps
+
 1. [Step 1]
 2. [Step 2]
 3. [...]
+```

@@ -1,9 +1,13 @@
 # User Authentication Architecture Specification
+
 You are an experienced full-stack web developer specializing in implementing user registration, login, and password recovery modules. Design a detailed architecture for this functionality based on the requirements from the file `@3-prd.md` and the tech stack from `@4-tech-stack.md`.
 Ensure full compliance with the remaining requirements — the existing application behavior described in the documentation must not be disrupted.
 The implementation will use **Supabase Auth** for registration, login, logout, and account recovery functionality, integrated with **Astro**.
+
 ---
+
 ## 1. USER INTERFACE ARCHITECTURE
+
 - A detailed description of frontend layer changes, including:
   - Description of new UI elements
   - Extension of existing components to support authentication requirements
@@ -21,8 +25,11 @@ The implementation will use **Supabase Auth** for registration, login, logout, a
   - Logout
   - Forgotten password and reset flow
   - Auth session persistence (local storage/cookies)
+
 ---
+
 ## 2. BACKEND LOGIC
+
 - API endpoint and data model structure:
   - Endpoints for supporting client-side forms (if needed beyond Supabase)
   - Abstracted service layer for user auth logic, if local business rules apply
@@ -37,8 +44,11 @@ The implementation will use **Supabase Auth** for registration, login, logout, a
   - Use of `@astro.config.mjs` to enable protected routes
   - Conditional rendering based on session state
   - Redirections for unauthenticated users when accessing restricted content
+
 ---
+
 ## 3. AUTHENTICATION SYSTEM
+
 - Supabase Auth integration with Astro:
   - Use of Supabase client SDK on the frontend
   - Use of Supabase Server API on the backend (if needed for SSR session checks)
@@ -50,11 +60,17 @@ The implementation will use **Supabase Auth** for registration, login, logout, a
   - Logout
   - Email/password recovery (trigger email, reset flow with token)
   - Email confirmation and status feedback
+
 ---
+
 ## Final Output
+
 Prepare the final document with this specification as a technical narrative, focusing on **components**, **modules**, **services**, and **contracts** involved, **without implementing the final code**.
+
 ### Save to file:
+
 ```
 .ai/documents/15-3-intoroduce-auth-spec.md
 ```
+
 Would you like me to generate the full Markdown file content now based on this structure?

@@ -72,11 +72,17 @@ Use the following structure for each user story:
 Prepare the PRD using the following structure:
 
 # Product Requirements Document (PRD) - {{app-name}}
+
 ## 1. Product Overview
+
 ## 2. User Problem
+
 ## 3. Functional Requirements
+
 ## 4. Product Boundaries
+
 ## 5. User Stories
+
 ## 6. Success Metrics
 
 Remember to fill out each section with detailed, relevant information based on the project description and our clarifying questions. Make sure the PRD is comprehensive, clear, and includes all essential information needed for further product development.

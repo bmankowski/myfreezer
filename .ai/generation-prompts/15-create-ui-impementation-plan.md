@@ -6,39 +6,39 @@ The plan should be **comprehensive** and **clear enough** for another frontend d
 First, review the following inputs:
 
 1. Product Requirements Document (PRD):
-<prd>
-@3-prd.md
-</prd>
+   <prd>
+   @3-prd.md
+   </prd>
 
 2. View Description:
-<view_description>
-{{view-description}} <- insert the description of the view to be implemented from ui-plan.md
-</view_description>
+   <view_description>
+   {{view-description}} <- insert the description of the view to be implemented from ui-plan.md
+   </view_description>
 
 3. User Stories:
-<user_stories>
-{{user-stories}} <- insert user stories from @prd.md that are addressed by the view
-</user_stories>
+   <user_stories>
+   {{user-stories}} <- insert user stories from @prd.md that are addressed by the view
+   </user_stories>
 
 4. Endpoint Description:
-<endpoint_description>
-{{endpoint-description}} <- insert endpoint descriptions from api-plan.md that the view will use
-</endpoint_description>
+   <endpoint_description>
+   {{endpoint-description}} <- insert endpoint descriptions from api-plan.md that the view will use
+   </endpoint_description>
 
 5. Endpoint Implementation:
-<endpoint_implementation>
-{{endpoint-implementation}} <- replace with references to the endpoint implementations the view will use (e.g., @generations.ts, @flashcards.ts)
-</endpoint_implementation>
+   <endpoint_implementation>
+   {{endpoint-implementation}} <- replace with references to the endpoint implementations the view will use (e.g., @generations.ts, @flashcards.ts)
+   </endpoint_implementation>
 
 6. Type Definitions:
-<type_definitions>
-@types.ts
-</type_definitions>
+   <type_definitions>
+   @types.ts
+   </type_definitions>
 
 7. Tech Stack:
-<tech_stack>
-@4-tech-stack.md
-</tech_stack>
+   <tech_stack>
+   @4-tech-stack.md
+   </tech_stack>
 
 ---
 
@@ -46,6 +46,7 @@ Before creating the final implementation plan, conduct an analysis and planning 
 This section can be quite long because it is important to be thorough.
 
 In your implementation breakdown, perform the following steps:
+
 1. For each input section (PRD, User Stories, Endpoint Description, Endpoint Implementation, Type Definitions, Tech Stack):
    - Summarize the key points
    - List any requirements or constraints
@@ -101,16 +102,21 @@ The final output should be **in Polish** and saved in a file named `.ai/{view-na
 # View Implementation Plan: [View Name]
 
 ## 1. Overview
+
 [Short description of the view and its purpose]
 
 ## 2. View Routing
+
 [Path where the view should be available]
 
 ## 3. Component Structure
+
 [Outline of main components and their hierarchy]
 
 ## 4. Component Details
+
 ### [Component Name 1]
+
 - Component description [description]
 - Main elements: [description]
 - Supported interactions: [list]
@@ -119,27 +125,36 @@ The final output should be **in Polish** and saved in a file named `.ai/{view-na
 - Props: [list]
 
 ### [Component Name 2]
+
 [...]
 
 ## 5. Types
+
 [Detailed description of required types]
 
 ## 6. State Management
+
 [State management description]
 
 ## 7. API Integration
+
 [Explanation of API integration, specifying request and response types]
 
 ## 8. User Interactions
+
 [Detailed description of user interactions]
 
 ## 9. Conditions and Validation
+
 [Detailed description of validation conditions]
 
 ## 10. Error Handling
+
 [Error and edge case handling description]
 
 ## 11. Implementation Steps
+
 1. [Step 1]
 2. [Step 2]
 3. [...]
+```

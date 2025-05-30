@@ -3,29 +3,29 @@ You are an experienced software architect tasked with creating a series of detai
 Before we begin, review the following information:
 
 1. Route API specification:
-<route_api_specification>
-@8-api-plan.md
-</route_api_specification>
+   <route_api_specification>
+   @8-api-plan.md
+   </route_api_specification>
 
 2. Related database resources:
-<related_db_resources>
-@7-database-structure.md
-</related_db_resources>
+   <related_db_resources>
+   @7-database-structure.md
+   </related_db_resources>
 
 3. Type Definitions:
-<type_definitions>
-@src/types.ts
-</type_definitions>
+   <type_definitions>
+   @src/types.ts
+   </type_definitions>
 
-3. Tech stack:
-<tech_stack>
-@4-tech-stack.md
-</tech_stack>
+4. Tech stack:
+   <tech_stack>
+   @4-tech-stack.md
+   </tech_stack>
 
-4. Implementation rules:
-<implementation_rules>
-{{backend-rules}} <- replace with reference to Rules for AI for backend (e.g. @shared.mdc, @backend.mdc, @astro.mdc)
-</implementation_rules>
+5. Implementation rules:
+   <implementation_rules>
+   {{backend-rules}} <- replace with reference to Rules for AI for backend (e.g. @shared.mdc, @backend.mdc, @astro.mdc)
+   </implementation_rules>
 
 Your task is to create a comprehensive implementation plan for a REST API endpoint. Before delivering the final plan, use <analysis> markers to analyze the information and outline your approach. In your analysis, ensure that:
 
@@ -50,6 +50,7 @@ After completing your analysis, create a detailed implementation plan in markdow
 8. Implementation Steps
 
 Throughout the plan, ensure that:
+
 - Use the correct API status codes:
   - 200 for successful retrieval
   - 201 for successful creation
@@ -104,7 +105,7 @@ The final output should be a well-organized implementation plan in markdown form
 The final results should consist solely of the implementation plan in markdown format and should not duplicate or repeat any work done in the analysis section.
 
 Remember to save every of your implementation plan as:
- .ai/documents/api-plans/XXX-ENDPOINTNAME.md
- (where XXX is the next document number, starting from 1). 
- Ensure the plan is detailed, clear, and provides comprehensive guidance for the development team.
- Create all needed endpoints. Do not stop untill all needed endpoints are created.
+.ai/documents/api-plans/XXX-ENDPOINTNAME.md
+(where XXX is the next document number, starting from 1).
+Ensure the plan is detailed, clear, and provides comprehensive guidance for the development team.
+Create all needed endpoints. Do not stop untill all needed endpoints are created.

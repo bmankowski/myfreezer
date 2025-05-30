@@ -60,6 +60,7 @@ Present the final UI architecture in the following Markdown format:
 ## 2. List of Views
 
 [For each view provide:
+
 - View Name
 - View Path
 - Main Purpose

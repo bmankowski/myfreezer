@@ -12,17 +12,20 @@
 Jesteś doświadczonym architektem API, którego zadaniem jest stworzenie kompleksowego planu API REST. Twój plan będzie oparty na podanym schemacie bazy danych, dokumencie wymagań produktu (PRD) i stacku technologicznym podanym powyżej. Uważnie przejrzyj dane wejściowe i wykonaj następujące kroki:
 
 1. Przeanalizuj schemat bazy danych:
+
    - Zidentyfikuj główne encje (tabele)
    - Zanotuj relacje między jednostkami
    - Rozważ wszelkie indeksy, które mogą mieć wpływ na projekt API
    - Zwróć uwagę na warunki walidacji określone w schemacie.
 
 2. Przeanalizuj PRD:
+
    - Zidentyfikuj kluczowe cechy i funkcjonalności
    - Zwróć uwagę na konkretne wymagania dotyczące operacji na danych (pobieranie, tworzenie, aktualizacja, usuwanie)
    - Zidentyfikuj wymagania logiki biznesowej, które wykraczają poza operacje CRUD
 
 3. Rozważ stack technologiczny:
+
    - Upewnij się, że plan API jest zgodny z określonymi technologiami.
    - Rozważ, w jaki sposób te technologie mogą wpłynąć na projekt API
 
@@ -50,13 +53,17 @@ Ta sekcja może być dość długa.
 Ostateczny plan API powinien być sformatowany w markdown i zawierać następujące sekcje:
 
 ``markdown
+
 # REST API Plan
 
 ## 1. Zasoby
+
 - Wymień każdy główny zasób i odpowiadającą mu tabelę bazy danych
 
 ## 2. Punkty końcowe
+
 Dla każdego zasobu podaj:
+
 - Metoda HTTP
 - Ścieżka URL
 - Krótki opis
@@ -67,13 +74,17 @@ Dla każdego zasobu podaj:
 - Kody i komunikaty błędów
 
 ## 3. Uwierzytelnianie i autoryzacja
+
 - Opisz wybrany mechanizm uwierzytelniania i szczegóły implementacji
 
 ## 4. Walidacja i logika biznesowa
+
 - Lista warunków walidacji dla każdego zasobu
 - Opisz, w jaki sposób logika biznesowa jest zaimplementowana w API
+
 ```
 
 Upewnij się, że Twój plan jest kompleksowy, dobrze skonstruowany i odnosi się do wszystkich aspektów materiałów wejściowych. Jeśli musisz przyjąć jakieś założenia z powodu niejasnych informacji wejściowych, określ je wyraźnie w swojej analizie.
 
 Końcowy wynik powinien składać się wyłącznie z planu API w formacie markdown w języku angielskim, który zapiszesz w .ai/10xTranslationFactory-documents/api-plan.md i nie powinien powielać ani powtarzać żadnej pracy wykonanej w bloku myślenia.
+```

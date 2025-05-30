@@ -31,38 +31,46 @@ Carefully analyze the implementation plan and rules. Pay particular attention to
 Follow these steps to implement the frontend view:
 
 ## 1. Component Structure
+
 - Identify all components listed in the implementation plan.
 - Create a hierarchical structure for these components.
 - Ensure that the responsibilities and relationships of each component are clearly defined.
 
 ## 2. API Integration
+
 - Identify all API endpoints listed in the plan.
 - Implement the necessary API calls for each endpoint.
 - Handle API responses and properly update component states.
 
 ## 3. User Interactions
+
 - List all user interactions specified in the implementation plan.
 - Implement event handlers for each interaction.
 - Ensure that each interaction triggers the correct action or state change.
 
 ## 4. State Management
+
 - Identify the required state for each component.
 - Implement state management using the appropriate method (local state, custom hook, shared state).
 - Ensure that state changes trigger the necessary re-renders.
 
 ## 5. Styling and Layout
+
 - Apply the specified styling and layout as mentioned in the plan.
 - Ensure responsiveness if required by the plan.
 
 ## 6. Error Handling and Edge Cases
+
 - Implement error handling for API calls and user interactions.
 - Consider and handle potential edge cases listed in the plan.
 
 ## 7. Performance Optimization
+
 - Implement any performance optimizations specified in the plan or rules.
 - Ensure efficient rendering and minimize unnecessary re-renders.
 
 ## 8. Testing
+
 - If specified in the plan, implement unit tests for components and functions.
 - Thoroughly test all user interactions and API integrations.
 

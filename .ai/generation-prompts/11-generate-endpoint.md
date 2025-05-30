@@ -11,7 +11,7 @@ First, carefully review the provided implementation plan:
 </types>
 
 <implementation_rules>
- @shared.mdc, @backend.mdc, @astro.mdc
+@shared.mdc, @backend.mdc, @astro.mdc
 </implementation_rules>
 
 <implementation_approach>
@@ -21,6 +21,7 @@ Perform a maximum of 3 steps of the implementation plan, briefly summarize what 
 Now, perform the following steps to implement the REST API endpoint:
 
 1. Analyze the implementation plan:
+
    - Determine the HTTP method (GET, POST, PUT, DELETE, etc.) for the endpoint.
    - Define the URL structure of the endpoint.
    - List all expected input parameters.
@@ -28,6 +29,7 @@ Now, perform the following steps to implement the REST API endpoint:
    - Pay attention to any special requirements regarding validation or error handling.
 
 2. Begin the implementation:
+
    - Start by defining the endpoint function with the appropriate HTTP method decorator.
    - Configure the function parameters based on the expected input data.
    - Implement input data validation for all parameters.
@@ -37,12 +39,14 @@ Now, perform the following steps to implement the REST API endpoint:
    - Prepare the response data structure.
 
 3. Validation and error handling:
+
    - Implement thorough validation for all input parameters.
    - Use appropriate HTTP status codes for different scenarios (e.g., 400 for bad requests, 404 for not found, 500 for server errors).
    - Provide clear and informative error messages in the response.
    - Handle any potential exceptions that may occur during processing.
 
 4. Considerations for testing:
+
    - Consider edge cases and potential issues that should be tested.
    - Ensure that the implementation covers all scenarios mentioned in the plan.
 

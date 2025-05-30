@@ -3,14 +3,14 @@ You're a skilled TypeScript developer tasked with creating a library of DTO (Dat
 First, carefully review the following input data:
 
 1. Database models:
-<database_models>
-@7-database-strucutre.md
-</database_models>
+   <database_models>
+   @7-database-strucutre.md
+   </database_models>
 
 2. API Plan (including defined DTO):
-<api_plan>
-@8-api-plan.md
-</api_plan>
+   <api_plan>
+   @8-api-plan.md
+   </api_plan>
 
 Your task is to create TypeScript type definitions for the DTOs and Command Models specified in the API plan, ensuring that they are derived from the database models. Follow these steps:
 
@@ -21,6 +21,7 @@ Your task is to create TypeScript type definitions for the DTOs and Command Mode
 5. Perform a final review to ensure that all DTOs are included and correctly connected to the entity definitions.
 
 Before producing the final result, work within the <dto_analysis> tags in your thought process to show your reasoning and ensure that all requirements are met. In your analysis:
+
 - List all DTOs and Command Models defined in the API plan, numbering each of them.
 - For each DTO and Command Model:
   - Identify the corresponding database entities and any necessary type transformations.
@@ -31,6 +32,7 @@ Before producing the final result, work within the <dto_analysis> tags in your t
 After conducting your analysis, provide the final type definitions for the DTOs and Command Models, which should be placed in the file src/types.ts. Use clear and descriptive names for your types and add comments to explain any complex type manipulations or non-obvious relationships.
 
 Remember:
+
 - Make sure that all DTOs and Command Models defined in the API plan are included.
 - Each DTO and Command Model should directly refer to one or more database entities.
 - When necessary, use TypeScript functions such as Pick, Omit, Partial, etc.

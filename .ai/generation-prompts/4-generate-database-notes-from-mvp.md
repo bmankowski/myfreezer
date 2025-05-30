@@ -7,28 +7,28 @@ Please review the following inputs carefully:
 </product_requirements>
 
 <tech_stack>  
-@4-tech-stack.md  <- reference to the technology stack document  
+@4-tech-stack.md <- reference to the technology stack document  
 </tech_stack>
 
 Analyze the provided information with a focus on database design-relevant aspects. Consider the following:
 
-1. Identify key entities and their attributes based on the product requirements.  
-2. Determine potential relationships between entities.  
-3. Consider data types and constraints that may be necessary.  
-4. Think about scalability and performance impact.  
-5. Assess security requirements and how they affect the database design.  
+1. Identify key entities and their attributes based on the product requirements.
+2. Determine potential relationships between entities.
+3. Consider data types and constraints that may be necessary.
+4. Think about scalability and performance impact.
+5. Assess security requirements and how they affect the database design.
 6. Consider any specific PostgreSQL features that might be beneficial for the project.
 
 Based on your analysis, generate a list of **questions** and **recommendations**. These should address any ambiguities, potential issues, or areas where more information is needed in order to create an effective database schema. Consider asking about:
 
-1. Entity relationships and cardinality  
-2. Data types and constraints  
-3. Indexing strategies  
-4. Partitioning (if applicable)  
-5. Row-level security requirements  
-6. Performance considerations  
-7. Scalability concerns  
-8. Data integrity and consistency  
+1. Entity relationships and cardinality
+2. Data types and constraints
+3. Indexing strategies
+4. Partitioning (if applicable)
+5. Row-level security requirements
+6. Performance considerations
+7. Scalability concerns
+8. Data integrity and consistency
 
 The output should follow this structure:
 

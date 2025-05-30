@@ -17,4 +17,4 @@ Use a **styling approach consistent with**:
 ```
 
 > **Important:**  
-Do **not** implement any backend logic or application state management — those parts will be addressed later.
+> Do **not** implement any backend logic or application state management — those parts will be addressed later.
