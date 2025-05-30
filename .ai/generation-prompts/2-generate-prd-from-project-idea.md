@@ -1,11 +1,11 @@
 You are an experienced product manager tasked with creating a comprehensive Product Requirements Document (PRD) based on the descriptions below:
 
 <project_description>
-{{project-description}} <- insert the MVP idea
+@.ai/documents/1.project-idea.md
 </project_description>
 
 <project_details>
-{{project-details}} <- insert th2e planning session summary
+.ai/documents/2.prd-planning-session.md
 </project_details>
 
 Follow these steps to create a comprehensive and well-structured document:
