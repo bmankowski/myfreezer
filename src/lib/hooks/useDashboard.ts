@@ -168,9 +168,12 @@ export function useDashboard() {
 
   const updateContainer = useCallback(async (id: string, data: UpdateContainerCommandDTO) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/containers/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -185,12 +188,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to update container'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const deleteContainer = useCallback(async (id: string) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/containers/${id}`, {
         method: 'DELETE',
+        headers,
       });
 
       if (!response.ok) {
@@ -204,13 +211,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to delete container'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const addShelf = useCallback(async (containerId: string, data: CreateShelfCommandDTO) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/containers/${containerId}/shelves`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -225,13 +235,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to add shelf'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const updateShelf = useCallback(async (shelfId: string, data: UpdateShelfCommandDTO) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/shelves/${shelfId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -246,12 +259,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to update shelf'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const deleteShelf = useCallback(async (shelfId: string) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/shelves/${shelfId}`, {
         method: 'DELETE',
+        headers,
       });
 
       if (!response.ok) {
@@ -265,13 +282,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to delete shelf'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const addItem = useCallback(async (shelfId: string, data: AddItemCommandDTO) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/shelves/${shelfId}/items`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -286,13 +306,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to add item'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const updateItemQuantity = useCallback(async (itemId: string, data: UpdateItemQuantityCommandDTO) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/items/${itemId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -307,13 +330,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to update item quantity'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const removeItemQuantity = useCallback(async (itemId: string, data: RemoveItemQuantityCommandDTO) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/items/${itemId}/remove`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -328,12 +354,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to remove item quantity'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const deleteItem = useCallback(async (itemId: string) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/items/${itemId}`, {
         method: 'DELETE',
+        headers,
       });
 
       if (!response.ok) {
@@ -347,13 +377,16 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to delete item'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   const moveItem = useCallback(async (itemId: string, data: MoveItemCommandDTO) => {
     try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
       const response = await fetch(`/api/items/${itemId}/move`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
@@ -368,7 +401,7 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to move item'
       }));
     }
-  }, [loadContainers]);
+  }, [getAuthHeaders, loadContainers]);
 
   // Initialize on mount
   useEffect(() => {
