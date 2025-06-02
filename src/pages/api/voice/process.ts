@@ -13,6 +13,10 @@ export const POST: APIRoute = async ({ locals, request }) => {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
+    if (!authResult.user_id) {
+      return createErrorResponse(401, "User ID not found");
+    }
+
     // Parse request body
     let body: VoiceProcessCommandDTO;
     try {
@@ -43,14 +47,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     // Process voice command using service
     const voiceService = new VoiceService(locals.supabase);
-    const result = await voiceService.processCommand({
-      command: sanitizedCommand,
-      context: body.context,
-    });
+    const result = await voiceService.processCommand(
+      {
+        command: sanitizedCommand,
+        context: body.context,
+      },
+      authResult.user_id
+    );
 
     // Return appropriate status based on result
     if (!result.success && result.message.includes("clarification")) {
-      return createErrorResponse(422, result.message, result);
+      return createErrorResponse(422, result.message);
     }
 
     return createSuccessResponse(result);

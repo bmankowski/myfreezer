@@ -103,10 +103,10 @@ export class VoiceService {
   /**
    * Process voice command with AI parsing and action execution
    */
-  async processCommand(command: VoiceProcessCommandDTO): Promise<VoiceProcessResponseDTO> {
+  async processCommand(command: VoiceProcessCommandDTO, userId: string): Promise<VoiceProcessResponseDTO> {
     try {
       // Get user context (containers and shelves)
-      const context = await this.getUserContext(command.context?.default_container_id);
+      const context = await this.getUserContext(userId, command.context?.default_container_id);
 
       // Parse command with AI
       const aiResult = await this.aiService.parseVoiceCommand(command.command, {
@@ -247,9 +247,9 @@ export class VoiceService {
     return `Znaleziono ${items.length} różnych przedmiotów`;
   }
 
-  private async getUserContext(defaultContainerId?: string): Promise<ActionContext> {
+  private async getUserContext(userId: string, defaultContainerId?: string): Promise<ActionContext> {
     // Get user's containers
-    const containers = await this.containerService.getUserContainers();
+    const containers = await this.containerService.getUserContainers(userId);
     const containerData = containers.map((c) => ({
       container_id: c.container_id,
       name: c.name,
