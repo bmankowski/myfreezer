@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Plus, Minus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import type { Item } from '@/types';
-import type { Toast } from '@/lib/hooks/useToasts';
+import React, { useState } from "react";
+import { Plus, Minus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { Item } from "@/types";
+import type { Toast } from "@/lib/hooks/useToasts";
 
 interface ItemRowProps {
   item: Pick<Item, "item_id" | "name" | "quantity" | "created_at">;
@@ -10,35 +10,28 @@ interface ItemRowProps {
   onQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
   onQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onDelete?: (itemId: string) => Promise<void>;
-  onToast: (toast: Omit<Toast, 'id'>) => void;
+  onToast: (toast: Omit<Toast, "id">) => void;
 }
 
-export function ItemRow({ 
-  item, 
-  searchQuery, 
-  onQuantityUpdate,
-  onQuantityRemove,
-  onDelete,
-  onToast 
-}: ItemRowProps) {
+export function ItemRow({ item, searchQuery, onQuantityUpdate, onQuantityRemove, onDelete, onToast }: ItemRowProps) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleQuantityUpdate = async (newQuantity: number) => {
     if (newQuantity < 0 || !onQuantityUpdate) return;
-    
+
     setIsUpdating(true);
     try {
       await onQuantityUpdate(item.item_id, newQuantity);
       onToast({
-        type: 'success',
-        title: 'Quantity updated',
+        type: "success",
+        title: "Quantity updated",
         description: `${item.name} quantity updated to ${newQuantity}`,
       });
     } catch (error) {
       onToast({
-        type: 'error',
-        title: 'Update failed',
-        description: error instanceof Error ? error.message : 'Failed to update quantity',
+        type: "error",
+        title: "Update failed",
+        description: error instanceof Error ? error.message : "Failed to update quantity",
       });
     } finally {
       setIsUpdating(false);
@@ -47,20 +40,20 @@ export function ItemRow({
 
   const handleRemoveQuantity = async (removeAmount: number) => {
     if (removeAmount <= 0 || removeAmount > item.quantity || !onQuantityRemove) return;
-    
+
     setIsUpdating(true);
     try {
       await onQuantityRemove(item.item_id, removeAmount);
       onToast({
-        type: 'success',
-        title: 'Quantity reduced',
+        type: "success",
+        title: "Quantity reduced",
         description: `${item.name} quantity reduced by ${removeAmount}`,
       });
     } catch (error) {
       onToast({
-        type: 'error',
-        title: 'Remove failed',
-        description: error instanceof Error ? error.message : 'Failed to remove quantity',
+        type: "error",
+        title: "Remove failed",
+        description: error instanceof Error ? error.message : "Failed to remove quantity",
       });
     } finally {
       setIsUpdating(false);
@@ -76,15 +69,15 @@ export function ItemRow({
     try {
       await onDelete(item.item_id);
       onToast({
-        type: 'success',
-        title: 'Item deleted',
+        type: "success",
+        title: "Item deleted",
         description: `${item.name} has been deleted`,
       });
     } catch (error) {
       onToast({
-        type: 'error',
-        title: 'Delete failed',
-        description: error instanceof Error ? error.message : 'Failed to delete item',
+        type: "error",
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Failed to delete item",
       });
     } finally {
       setIsUpdating(false);
@@ -94,28 +87,28 @@ export function ItemRow({
   // Highlight search terms
   const highlightText = (text: string, query?: string) => {
     if (!query || query.length < 2) return text;
-    
-    const regex = new RegExp(`(${query})`, 'gi');
+
+    const regex = new RegExp(`(${query})`, "gi");
     const parts = text.split(regex);
-    
-    return parts.map((part, index) => 
+
+    return parts.map((part, index) =>
       regex.test(part) ? (
         <mark key={index} className="bg-yellow-200 px-1 rounded">
           {part}
         </mark>
-      ) : part
+      ) : (
+        part
+      )
     );
   };
 
   return (
     <div className="flex items-center justify-between p-2 bg-white rounded border border-gray-100">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">
-          {highlightText(item.name, searchQuery)}
-        </p>
+        <p className="text-sm font-medium text-gray-900 truncate">{highlightText(item.name, searchQuery)}</p>
         <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
       </div>
-      
+
       <div className="flex items-center space-x-1">
         <Button
           variant="ghost"
@@ -126,11 +119,9 @@ export function ItemRow({
         >
           <Minus className="h-3 w-3" />
         </Button>
-        
-        <span className="text-xs font-medium min-w-[2rem] text-center">
-          {item.quantity}
-        </span>
-        
+
+        <span className="text-xs font-medium min-w-[2rem] text-center">{item.quantity}</span>
+
         <Button
           variant="ghost"
           size="sm"
@@ -141,15 +132,10 @@ export function ItemRow({
           <Plus className="h-3 w-3" />
         </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleDelete}
-          className="h-6 w-6 p-0 text-red-600"
-        >
+        <Button variant="ghost" size="sm" onClick={handleDelete} className="h-6 w-6 p-0 text-red-600">
           <Trash2 className="h-3 w-3" />
         </Button>
       </div>
     </div>
   );
-} 
+}

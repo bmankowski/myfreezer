@@ -31,7 +31,12 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     // Change password using service
     const authService = new AuthService(locals.supabase);
-    const result = await authService.changePassword(command, authResult.user_id!);
+
+    if (!authResult.user_id) {
+      return createErrorResponse(401, "User ID not found in authentication result");
+    }
+
+    const result = await authService.changePassword(command, authResult.user_id);
 
     return createSuccessResponse(result);
   } catch (error) {

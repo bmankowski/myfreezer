@@ -8,7 +8,6 @@ import type {
   VoiceQueryCommandDTO,
   VoiceQueryResponseDTO,
   VoiceQueryItemDTO,
-  ItemLocationDTO,
 } from "../../types.js";
 import { AIService } from "./ai.service.js";
 import { ContainerService } from "./container.service.js";
@@ -86,7 +85,7 @@ export class VoiceService {
       return {
         found: aggregatedItems.length > 0,
         items: aggregatedItems,
-        message: this.generateQueryMessage(aggregatedItems, command.query),
+        message: this.generateQueryMessage(aggregatedItems),
         ai_response: aiResponse,
       };
     } catch (error) {
@@ -139,7 +138,7 @@ export class VoiceService {
           } else {
             overallSuccess = false;
           }
-        } catch (error) {
+        } catch {
           overallSuccess = false;
           actions.push({
             type: parsedAction.type,
@@ -189,27 +188,34 @@ export class VoiceService {
     return cleanQuery || query;
   }
 
-  private aggregateItemsByName(items: any[]): VoiceQueryItemDTO[] {
+  private aggregateItemsByName(
+    items: {
+      name: string;
+      quantity: number;
+      shelf: { name: string; position: number };
+      container: { name: string };
+    }[]
+  ): VoiceQueryItemDTO[] {
     const itemMap = new Map<string, VoiceQueryItemDTO>();
 
     for (const item of items) {
       const key = item.name.toLowerCase();
 
       if (itemMap.has(key)) {
-        const existing = itemMap.get(key)!;
-        existing.quantity += item.quantity;
-
-        // Add location if not already present
-        const locationExists = existing.locations.some(
-          (loc) => loc.container_name === item.container.name && loc.shelf_name === item.shelf.name
-        );
-
-        if (!locationExists) {
-          existing.locations.push({
-            container_name: item.container.name,
-            shelf_name: item.shelf.name,
-            shelf_position: item.shelf.position,
-          });
+        const existing = itemMap.get(key);
+        if (existing) {
+          existing.quantity += item.quantity;
+          // Add this location if not already present
+          const locationExists = existing.locations.some(
+            (loc) => loc.shelf_name === item.shelf.name && loc.container_name === item.container.name
+          );
+          if (!locationExists) {
+            existing.locations.push({
+              shelf_name: item.shelf.name,
+              container_name: item.container.name,
+              shelf_position: item.shelf.position,
+            });
+          }
         }
       } else {
         itemMap.set(key, {
@@ -217,8 +223,8 @@ export class VoiceService {
           quantity: item.quantity,
           locations: [
             {
-              container_name: item.container.name,
               shelf_name: item.shelf.name,
+              container_name: item.container.name,
               shelf_position: item.shelf.position,
             },
           ],
@@ -229,9 +235,9 @@ export class VoiceService {
     return Array.from(itemMap.values());
   }
 
-  private generateQueryMessage(items: VoiceQueryItemDTO[], originalQuery: string): string {
+  private generateQueryMessage(items: VoiceQueryItemDTO[]): string {
     if (items.length === 0) {
-      return "Nie znaleziono pasujących przedmiotów";
+      return "Nie znaleziono żadnych przedmiotów";
     }
 
     if (items.length === 1) {
@@ -298,7 +304,16 @@ export class VoiceService {
     };
   }
 
-  private async executeAction(parsedAction: any, context: ActionContext): Promise<VoiceActionDTO> {
+  private async executeAction(
+    parsedAction: {
+      type: string;
+      item_name: string;
+      quantity: number;
+      shelf_identifier?: string;
+      container_identifier?: string;
+    },
+    context: ActionContext
+  ): Promise<VoiceActionDTO> {
     const { item_name, quantity, shelf_identifier, container_identifier } = parsedAction;
 
     // Resolve shelf
@@ -332,7 +347,7 @@ export class VoiceService {
             details,
           };
 
-        case "remove_item":
+        case "remove_item": {
           const removeResult = await this.itemService.removeItemQuantity(
             await this.findItemId(item_name, shelf.shelf_id),
             { quantity }
@@ -345,8 +360,9 @@ export class VoiceService {
             status: "success",
             details,
           };
+        }
 
-        case "update_item":
+        case "update_item": {
           const updateResult = await this.itemService.updateItemQuantity(
             await this.findItemId(item_name, shelf.shelf_id),
             { quantity }
@@ -359,6 +375,7 @@ export class VoiceService {
             status: "success",
             details,
           };
+        }
 
         case "query_item":
           // For queries, we'll just return success - actual search is handled separately
@@ -371,7 +388,7 @@ export class VoiceService {
         default:
           throw new Error("Unknown action type");
       }
-    } catch (error) {
+    } catch {
       return {
         type: parsedAction.type,
         status: "failed",

@@ -23,8 +23,6 @@ export const POST: APIRoute = async ({ locals, request }) => {
   } catch (error) {
     console.error("Logout error:", error);
 
-    const errorMessage = error instanceof Error ? error.message : "Logout failed";
-
     // Even if logout fails, we still consider it successful from client perspective
     return createSuccessResponse({
       message: "Logout successful",

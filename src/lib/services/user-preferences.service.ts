@@ -1,10 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
-import type {
-  UserPreferencesDTO,
-  SetDefaultShelfCommandDTO,
-  SetDefaultShelfResponseDTO,
-} from "../../types.js";
+import type { UserPreferencesDTO, SetDefaultShelfCommandDTO, SetDefaultShelfResponseDTO } from "../../types.js";
 
 export class UserPreferencesService {
   constructor(private supabase: SupabaseClient<Database>) {}
@@ -15,7 +11,8 @@ export class UserPreferencesService {
   async getUserPreferences(userId: string): Promise<UserPreferencesDTO | null> {
     const { data, error } = await this.supabase
       .from("user_preferences")
-      .select(`
+      .select(
+        `
         user_id,
         default_shelf_id,
         created_at,
@@ -29,7 +26,8 @@ export class UserPreferencesService {
             name
           )
         )
-      `)
+      `
+      )
       .eq("user_id", userId)
       .single();
 
@@ -42,8 +40,14 @@ export class UserPreferencesService {
     }
 
     // Type assertion for the joined data structure
-    const shelfData = data.shelves as any;
-    
+    const shelfData = data.shelves as {
+      shelf_id: string;
+      name: string;
+      position: number;
+      container_id: string;
+      containers?: { name: string };
+    } | null;
+
     return {
       user_id: data.user_id,
       default_shelf_id: data.default_shelf_id,
@@ -68,7 +72,8 @@ export class UserPreferencesService {
     // First, verify the shelf exists and belongs to the user
     const { data: shelfCheck, error: shelfError } = await this.supabase
       .from("shelves")
-      .select(`
+      .select(
+        `
         shelf_id,
         name,
         position,
@@ -77,7 +82,8 @@ export class UserPreferencesService {
           name,
           user_id
         )
-      `)
+      `
+      )
       .eq("shelf_id", command.shelf_id)
       .single();
 
@@ -86,22 +92,26 @@ export class UserPreferencesService {
     }
 
     // Type assertion for the joined data
-    const containerData = shelfCheck.containers as any;
-    
+    const containerData = shelfCheck.containers as {
+      name: string;
+      user_id: string;
+    } | null;
+
     if (containerData?.user_id !== userId) {
       throw new Error("Shelf not found or access denied");
     }
 
     // Upsert user preferences (insert if not exists, update if exists)
-    const { error: upsertError } = await this.supabase
-      .from("user_preferences")
-      .upsert({
+    const { error: upsertError } = await this.supabase.from("user_preferences").upsert(
+      {
         user_id: userId,
         default_shelf_id: command.shelf_id,
         updated_at: new Date().toISOString(),
-      }, {
+      },
+      {
         onConflict: "user_id",
-      });
+      }
+    );
 
     if (upsertError) {
       throw new Error(`Failed to set default shelf: ${upsertError.message}`);
@@ -122,15 +132,16 @@ export class UserPreferencesService {
    * Clear default shelf for user
    */
   async clearDefaultShelf(userId: string): Promise<{ message: string }> {
-    const { error } = await this.supabase
-      .from("user_preferences")
-      .upsert({
+    const { error } = await this.supabase.from("user_preferences").upsert(
+      {
         user_id: userId,
         default_shelf_id: null,
         updated_at: new Date().toISOString(),
-      }, {
+      },
+      {
         onConflict: "user_id",
-      });
+      }
+    );
 
     if (error) {
       throw new Error(`Failed to clear default shelf: ${error.message}`);
@@ -157,13 +168,15 @@ export class UserPreferencesService {
     if (error) {
       if (error.code === "23505") {
         // User preferences already exist, fetch them
-        return await this.getUserPreferences(userId) || {
-          user_id: userId,
-          default_shelf_id: null,
-          default_shelf: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
+        return (
+          (await this.getUserPreferences(userId)) || {
+            user_id: userId,
+            default_shelf_id: null,
+            default_shelf: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+        );
       }
       throw new Error(`Failed to initialize user preferences: ${error.message}`);
     }
@@ -176,4 +189,4 @@ export class UserPreferencesService {
       updated_at: data.updated_at,
     };
   }
-} 
+}

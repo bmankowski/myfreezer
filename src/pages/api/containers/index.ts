@@ -14,7 +14,12 @@ export const GET: APIRoute = async ({ locals, request }) => {
 
     // Get containers using service
     const containerService = new ContainerService(locals.supabase);
-    const containers = await containerService.getUserContainers(authResult.user_id!);
+
+    if (!authResult.user_id) {
+      return createErrorResponse(401, "User ID not found in authentication result");
+    }
+
+    const containers = await containerService.getUserContainers(authResult.user_id);
 
     const response: ContainerListResponseDTO = {
       containers,
@@ -59,12 +64,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     // Create container using service
     const containerService = new ContainerService(locals.supabase);
+
+    if (!authResult.user_id) {
+      return createErrorResponse(401, "User ID not found in authentication result");
+    }
+
     const container = await containerService.createContainer(
       {
         name: body.name.trim(),
         type: body.type || "freezer",
       },
-      authResult.user_id!
+      authResult.user_id
     );
 
     return createSuccessResponse(container, 201);

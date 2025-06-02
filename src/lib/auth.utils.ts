@@ -63,7 +63,7 @@ export function createErrorResponse(status: number, message: string): Response {
 /**
  * Create standardized success responses
  */
-export function createSuccessResponse(data: any, status = 200): Response {
+export function createSuccessResponse<T = unknown>(data: T, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {

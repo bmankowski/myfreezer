@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 export function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -24,7 +24,7 @@ export function LoginForm() {
 
     // Check for autofill after a short delay
     const timer = setTimeout(checkAutofill, 100);
-    
+
     // Also check on focus events
     const handleFocus = () => {
       setTimeout(checkAutofill, 0);
@@ -34,19 +34,19 @@ export function LoginForm() {
     const passwordInput = passwordRef.current;
 
     if (emailInput) {
-      emailInput.addEventListener('focus', handleFocus);
+      emailInput.addEventListener("focus", handleFocus);
     }
     if (passwordInput) {
-      passwordInput.addEventListener('focus', handleFocus);
+      passwordInput.addEventListener("focus", handleFocus);
     }
 
     return () => {
       clearTimeout(timer);
       if (emailInput) {
-        emailInput.removeEventListener('focus', handleFocus);
+        emailInput.removeEventListener("focus", handleFocus);
       }
       if (passwordInput) {
-        passwordInput.removeEventListener('focus', handleFocus);
+        passwordInput.removeEventListener("focus", handleFocus);
       }
     };
   }, [email, password]);
@@ -57,42 +57,42 @@ export function LoginForm() {
 
     // Get the actual form values in case React state is out of sync
     const formData = new FormData(e.target as HTMLFormElement);
-    const emailValue = formData.get('email') as string || email;
-    const passwordValue = formData.get('password') as string || password;
+    const emailValue = (formData.get("email") as string) || email;
+    const passwordValue = (formData.get("password") as string) || password;
 
-    console.log('🔐 Login attempt:', { email: emailValue });
+    console.log("🔐 Login attempt:", { email: emailValue });
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email: emailValue, password: passwordValue }),
       });
 
       const data = await response.json();
 
-      console.log('🔐 Login response:', { success: response.ok, data });
+      console.log("🔐 Login response:", { success: response.ok, data });
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || "Login failed");
       }
 
       // Store the tokens in localStorage
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-      console.log('🔐 Login successful, tokens stored');
+      console.log("🔐 Login successful, tokens stored");
 
-      toast.success('Login successful!');
-      
+      toast.success("Login successful!");
+
       // Redirect to dashboard
-      window.location.href = '/';
+      window.location.href = "/";
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Login failed';
-      console.error('🔐 Login error:', message);
+      const message = error instanceof Error ? error.message : "Login failed";
+      console.error("🔐 Login error:", message);
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -143,18 +143,14 @@ export function LoginForm() {
       </div>
 
       <div>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full"
-        >
-          {isLoading ? 'Signing in...' : 'Sign in'}
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </div>
 
       <div className="text-center">
         <p className="text-sm text-gray-600">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{" "}
           <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
             Sign up
           </a>
@@ -162,4 +158,4 @@ export function LoginForm() {
       </div>
     </form>
   );
-} 
+}

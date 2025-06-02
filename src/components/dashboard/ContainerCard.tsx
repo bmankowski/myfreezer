@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
-import { MoreVertical, Plus, Trash2, Edit } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { MoreVertical, Plus, Trash2, Edit } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ShelfList } from './ShelfList';
-import { EditContainerModal } from './modals/EditContainerModal';
-import { AddShelfModal } from './modals/AddShelfModal';
-import type { 
-  ContainerDetailsDTO, 
+} from "@/components/ui/dropdown-menu";
+import { ShelfList } from "./ShelfList";
+import { EditContainerModal } from "./modals/EditContainerModal";
+import { AddShelfModal } from "./modals/AddShelfModal";
+import type {
+  ContainerDetailsDTO,
   UpdateContainerCommandDTO,
   CreateShelfCommandDTO,
   UpdateShelfCommandDTO,
   AddItemCommandDTO,
-  UserPreferencesDTO
-} from '@/types';
-import type { Toast } from '@/lib/hooks/useToasts';
+  UserPreferencesDTO,
+} from "@/types";
+import type { Toast } from "@/lib/hooks/useToasts";
 
 interface ContainerCardProps {
   container: ContainerDetailsDTO;
@@ -35,7 +35,7 @@ interface ContainerCardProps {
   onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
   onSetAsDefault?: (shelfId: string) => Promise<void>;
-  onToast: (toast: Omit<Toast, 'id'>) => void;
+  onToast: (toast: Omit<Toast, "id">) => void;
 }
 
 export function ContainerCard({
@@ -58,24 +58,24 @@ export function ContainerCard({
   const [isAddShelfModalOpen, setIsAddShelfModalOpen] = useState(false);
 
   const isEmpty = container.total_items === 0;
-  const containerTypeIcon = container.type === 'freezer' ? '❄️' : '🧊';
-  const containerTypeColor = container.type === 'freezer' ? 'text-blue-600' : 'text-cyan-600';
+  const containerTypeIcon = container.type === "freezer" ? "❄️" : "🧊";
+  const containerTypeColor = container.type === "freezer" ? "text-blue-600" : "text-cyan-600";
 
   const handleDelete = () => {
     if (!isEmpty) {
       onToast({
-        type: 'error',
-        title: 'Cannot delete container',
-        description: 'Container must be empty before deletion',
+        type: "error",
+        title: "Cannot delete container",
+        description: "Container must be empty before deletion",
       });
       return;
     }
 
-    if (window.confirm('Are you sure you want to delete this container?')) {
+    if (window.confirm("Are you sure you want to delete this container?")) {
       onDelete();
       onToast({
-        type: 'success',
-        title: 'Container deleted',
+        type: "success",
+        title: "Container deleted",
         description: `${container.name} has been deleted`,
       });
     }
@@ -84,8 +84,8 @@ export function ContainerCard({
   const handleUpdate = (data: UpdateContainerCommandDTO) => {
     onUpdate(data);
     onToast({
-      type: 'success',
-      title: 'Container updated',
+      type: "success",
+      title: "Container updated",
       description: `${data.name} has been updated`,
     });
     setIsEditModalOpen(false);
@@ -94,8 +94,8 @@ export function ContainerCard({
   const handleShelfAdd = (data: CreateShelfCommandDTO) => {
     onShelfAdd(data);
     onToast({
-      type: 'success',
-      title: 'Shelf added',
+      type: "success",
+      title: "Shelf added",
       description: `${data.name} has been added`,
     });
     setIsAddShelfModalOpen(false);
@@ -108,9 +108,7 @@ export function ContainerCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-lg">{containerTypeIcon}</span>
-              <h3 className={`font-semibold text-lg ${containerTypeColor}`}>
-                {container.name}
-              </h3>
+              <h3 className={`font-semibold text-lg ${containerTypeColor}`}>{container.name}</h3>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -123,11 +121,7 @@ export function ContainerCard({
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={handleDelete}
-                  disabled={!isEmpty}
-                  className="text-red-600"
-                >
+                <DropdownMenuItem onClick={handleDelete} disabled={!isEmpty} className="text-red-600">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
@@ -139,7 +133,7 @@ export function ContainerCard({
             <span>{container.total_items} items</span>
           </div>
         </CardHeader>
-        
+
         <CardContent className="pt-0">
           <ShelfList
             shelves={container.shelves}
@@ -155,13 +149,8 @@ export function ContainerCard({
             onSetAsDefault={onSetAsDefault}
             onToast={onToast}
           />
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAddShelfModalOpen(true)}
-            className="w-full mt-4"
-          >
+
+          <Button variant="outline" size="sm" onClick={() => setIsAddShelfModalOpen(true)} className="w-full mt-4">
             <Plus className="mr-2 h-4 w-4" />
             Add Shelf
           </Button>
@@ -178,9 +167,9 @@ export function ContainerCard({
       <AddShelfModal
         isOpen={isAddShelfModalOpen}
         onClose={() => setIsAddShelfModalOpen(false)}
-        existingPositions={container.shelves.map(s => s.position)}
+        existingPositions={container.shelves.map((s) => s.position)}
         onAdd={handleShelfAdd}
       />
     </>
   );
-} 
+}

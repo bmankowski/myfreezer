@@ -74,7 +74,10 @@ export class AIService {
   /**
    * Generate natural language response for voice query results
    */
-  async generateQueryResponse(query: string, results: any[]): Promise<string> {
+  async generateQueryResponse(
+    query: string,
+    results: { name: string; quantity: number; shelf_name: string; container_name: string }[]
+  ): Promise<string> {
     const systemPrompt = `You are a helpful assistant for a Polish freezer/fridge management app called MyFreezer.
 Your task is to generate natural, conversational Polish responses to user queries about their inventory.
 Be concise but informative. Use Polish language naturally.`;

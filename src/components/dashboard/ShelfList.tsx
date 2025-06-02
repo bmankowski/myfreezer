@@ -1,16 +1,10 @@
-import React from 'react';
-import { ShelfSection } from './ShelfSection';
-import type { 
-  ShelfWithItemsDTO,
-  UpdateShelfCommandDTO,
-  AddItemCommandDTO,
-  UserPreferencesDTO
-} from '@/types';
-import type { Toast } from '@/lib/hooks/useToasts';
+import React from "react";
+import { ShelfSection } from "./ShelfSection";
+import type { ShelfWithItemsDTO, UpdateShelfCommandDTO, AddItemCommandDTO, UserPreferencesDTO } from "@/types";
+import type { Toast } from "@/lib/hooks/useToasts";
 
 interface ShelfListProps {
   shelves: ShelfWithItemsDTO[];
-  containerId: string;
   searchQuery?: string;
   userPreferences?: UserPreferencesDTO | null;
   onShelfUpdate: (shelfId: string, data: UpdateShelfCommandDTO) => void;
@@ -20,12 +14,11 @@ interface ShelfListProps {
   onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
   onSetAsDefault?: (shelfId: string) => Promise<void>;
-  onToast: (toast: Omit<Toast, 'id'>) => void;
+  onToast: (toast: Omit<Toast, "id">) => void;
 }
 
 export function ShelfList({
   shelves,
-  containerId,
   searchQuery,
   userPreferences,
   onShelfUpdate,
@@ -69,4 +62,4 @@ export function ShelfList({
       ))}
     </div>
   );
-} 
+}

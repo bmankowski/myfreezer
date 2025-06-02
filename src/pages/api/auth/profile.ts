@@ -14,7 +14,12 @@ export const GET: APIRoute = async ({ locals, request }) => {
 
     // Get user profile using service
     const authService = new AuthService(locals.supabase);
-    const userProfile = await authService.getCurrentUser(authResult.user_id!);
+
+    if (!authResult.user_id) {
+      return createErrorResponse(401, "User ID not found in authentication result");
+    }
+
+    const userProfile = await authService.getCurrentUser(authResult.user_id);
 
     return createSuccessResponse(userProfile);
   } catch (error) {
@@ -58,7 +63,12 @@ export const PUT: APIRoute = async ({ locals, request }) => {
 
     // Update profile using service
     const authService = new AuthService(locals.supabase);
-    const result = await authService.updateProfile(command, authResult.user_id!);
+
+    if (!authResult.user_id) {
+      return createErrorResponse(401, "User ID not found in authentication result");
+    }
+
+    const result = await authService.updateProfile(command, authResult.user_id);
 
     return createSuccessResponse(result);
   } catch (error) {

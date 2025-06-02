@@ -26,14 +26,14 @@ export const POST: APIRoute = async ({ locals, request }) => {
     return createSuccessResponse(result);
   } catch (error) {
     console.error("Refresh token error:", error);
-    
+
     const errorMessage = error instanceof Error ? error.message : "Token refresh failed";
-    
+
     // Handle specific auth errors
     if (errorMessage.includes("Invalid") || errorMessage.includes("expired")) {
       return createErrorResponse(401, "Invalid or expired refresh token");
     }
-    
+
     return createErrorResponse(500, "Internal server error");
   }
 };

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Toaster } from '@/components/ui/sonner';
-import { toast } from 'sonner';
-import type { Toast } from '@/lib/hooks/useToasts';
+import React from "react";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+import type { Toast } from "@/lib/hooks/useToasts";
 
 interface ToastContainerProps {
   toasts: Toast[];
@@ -13,35 +13,28 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   React.useEffect(() => {
     toasts.forEach((toastItem) => {
       const { type, title, description } = toastItem;
-      
+
       switch (type) {
-        case 'success':
+        case "success":
           toast.success(title, { description });
           break;
-        case 'error':
+        case "error":
           toast.error(title, { description });
           break;
-        case 'warning':
+        case "warning":
           toast.warning(title, { description });
           break;
-        case 'info':
+        case "info":
           toast.info(title, { description });
           break;
         default:
           toast(title, { description });
       }
-      
+
       // Dismiss the toast from our state after showing
       onDismiss(toastItem.id);
     });
   }, [toasts, onDismiss]);
 
-  return (
-    <Toaster
-      position="bottom-left"
-      expand={true}
-      richColors={true}
-      closeButton={true}
-    />
-  );
-} 
+  return <Toaster position="bottom-left" expand={true} richColors={true} closeButton={true} />;
+}

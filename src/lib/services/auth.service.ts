@@ -53,7 +53,7 @@ export class AuthService {
       return {
         user: {
           user_id: data.user.id,
-          email: data.user.email!,
+          email: data.user.email || "",
           firstName: command.firstName,
           lastName: command.lastName,
         },
@@ -87,7 +87,7 @@ export class AuthService {
       return {
         user: {
           user_id: data.user.id,
-          email: data.user.email,
+          email: data.user.email as string,
           firstName: data.user.user_metadata?.firstName,
           lastName: data.user.user_metadata?.lastName,
         },
@@ -204,7 +204,16 @@ export class AuthService {
    */
   async updateProfile(command: UpdateProfileCommandDTO, userId: string): Promise<UpdateProfileResponseDTO> {
     try {
-      const updateData: any = {};
+      // Verify the user is authenticated and matches the provided userId
+      const { data: user } = await this.supabase.auth.getUser();
+      if (!user.user || user.user.id !== userId) {
+        throw new Error("User not authenticated");
+      }
+
+      const updateData: {
+        data?: { firstName?: string; lastName?: string };
+        email?: string;
+      } = {};
 
       if (command.firstName !== undefined || command.lastName !== undefined) {
         updateData.data = {
@@ -230,7 +239,7 @@ export class AuthService {
       return {
         user: {
           user_id: data.user.id,
-          email: data.user.email!,
+          email: data.user.email || "",
           firstName: data.user.user_metadata?.firstName || command.firstName,
           lastName: data.user.user_metadata?.lastName || command.lastName,
         },
@@ -334,7 +343,7 @@ export class AuthService {
 
       return {
         user_id: data.user.id,
-        email: data.user.email!,
+        email: data.user.email || "",
         firstName: data.user.user_metadata?.firstName,
         lastName: data.user.user_metadata?.lastName,
         email_verified: !!data.user.email_confirmed_at,

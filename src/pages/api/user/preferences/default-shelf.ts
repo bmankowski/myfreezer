@@ -13,11 +13,16 @@ export const DELETE: APIRoute = async ({ locals, request }) => {
 
     // Clear default shelf using service
     const userPreferencesService = new UserPreferencesService(locals.supabase);
-    const result = await userPreferencesService.clearDefaultShelf(authResult.user_id!);
+
+    if (!authResult.user_id) {
+      return createErrorResponse(401, "User ID not found in authentication result");
+    }
+
+    const result = await userPreferencesService.clearDefaultShelf(authResult.user_id);
 
     return createSuccessResponse(result);
   } catch (error) {
     console.error("Clear default shelf error:", error);
     return createErrorResponse(500, "Internal server error");
   }
-}; 
+};

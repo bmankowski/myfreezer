@@ -9,14 +9,14 @@ export function isValidUUID(uuid: string): boolean {
 /**
  * Validate string is not empty after trimming
  */
-export function isNonEmptyString(value: any): value is string {
+export function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
 /**
  * Validate string is a non-empty string (alias for isNonEmptyString)
  */
-export function isValidString(value: any): value is string {
+export function isValidString(value: unknown): value is string {
   return isNonEmptyString(value);
 }
 
@@ -30,6 +30,6 @@ export function isValidLength(value: string, maxLength: number): boolean {
 /**
  * Validate container type
  */
-export function isValidContainerType(type: any): type is "freezer" | "fridge" {
+export function isValidContainerType(type: unknown): type is "freezer" | "fridge" {
   return type === "freezer" || type === "fridge";
 }

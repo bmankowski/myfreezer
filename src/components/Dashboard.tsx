@@ -1,29 +1,29 @@
-import React, { useEffect } from 'react';
-import { useDashboard } from '@/lib/hooks/useDashboard';
-import { useUserPreferences } from '@/lib/hooks/useUserPreferences';
-import { useToasts } from '@/lib/hooks/useToasts';
-import { Header } from './dashboard/Header';
-import { ContainerGrid } from './dashboard/ContainerGrid';
-import { FloatingMicrophone } from './dashboard/FloatingMicrophone';
-import { ToastContainer } from './dashboard/ToastContainer';
-import { Skeleton } from '@/components/ui/skeleton';
+import React, { useEffect } from "react";
+import { useDashboard } from "@/lib/hooks/useDashboard";
+import { useUserPreferences } from "@/lib/hooks/useUserPreferences";
+import { useToasts } from "@/lib/hooks/useToasts";
+import { Header } from "./dashboard/Header";
+import { ContainerGrid } from "./dashboard/ContainerGrid";
+import { FloatingMicrophone } from "./dashboard/FloatingMicrophone";
+import { ToastContainer } from "./dashboard/ToastContainer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function Dashboard() {
   const { state, actions } = useDashboard();
   const { preferences, setDefaultShelf } = useUserPreferences();
   const { toasts, addToast, dismissToast } = useToasts();
 
-  console.log('🏠 Dashboard state:', { 
-    isAuthenticated: state.isAuthenticated, 
+  console.log("🏠 Dashboard state:", {
+    isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
     containersCount: state.containers.length,
-    defaultShelf: preferences?.default_shelf?.name
+    defaultShelf: preferences?.default_shelf?.name,
   });
 
   // Handle authentication redirect
   useEffect(() => {
     if (state.isAuthenticated === false) {
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   }, [state.isAuthenticated]);
 
@@ -31,20 +31,15 @@ export function Dashboard() {
   useEffect(() => {
     if (state.error) {
       addToast({
-        type: 'error',
-        title: 'Error',
+        type: "error",
+        title: "Error",
         description: state.error,
       });
     }
   }, [state.error, addToast]);
 
   const handleSetAsDefault = async (shelfId: string) => {
-    try {
-      await setDefaultShelf(shelfId);
-    } catch (error) {
-      // Error will be handled by the useUserPreferences hook and component
-      throw error;
-    }
+    await setDefaultShelf(shelfId);
   };
 
   const handleItemQuantityUpdate = async (itemId: string, quantity: number) => {
@@ -52,16 +47,16 @@ export function Dashboard() {
       const result = await actions.updateItemQuantity(itemId, { quantity });
       if (result) {
         addToast({
-          type: 'success',
-          title: 'Item updated',
+          type: "success",
+          title: "Item updated",
           description: `Quantity updated successfully`,
         });
       }
     } catch (error) {
       addToast({
-        type: 'error',
-        title: 'Update failed',
-        description: error instanceof Error ? error.message : 'Failed to update item',
+        type: "error",
+        title: "Update failed",
+        description: error instanceof Error ? error.message : "Failed to update item",
       });
     }
   };
@@ -71,18 +66,19 @@ export function Dashboard() {
       const result = await actions.removeItemQuantity(itemId, { quantity });
       if (result) {
         addToast({
-          type: 'success',
-          title: result.action === 'deleted' ? 'Item removed' : 'Item updated',
-          description: result.action === 'deleted' 
-            ? `${result.name} was completely removed`
-            : `Quantity reduced to ${result.quantity}`,
+          type: "success",
+          title: result.action === "deleted" ? "Item removed" : "Item updated",
+          description:
+            result.action === "deleted"
+              ? `${result.name} was completely removed`
+              : `Quantity reduced to ${result.quantity}`,
         });
       }
     } catch (error) {
       addToast({
-        type: 'error',
-        title: 'Remove failed', 
-        description: error instanceof Error ? error.message : 'Failed to remove quantity',
+        type: "error",
+        title: "Remove failed",
+        description: error instanceof Error ? error.message : "Failed to remove quantity",
       });
     }
   };
@@ -91,15 +87,15 @@ export function Dashboard() {
     try {
       await actions.deleteItem(itemId);
       addToast({
-        type: 'success',
-        title: 'Item deleted',
-        description: 'Item has been removed successfully',
+        type: "success",
+        title: "Item deleted",
+        description: "Item has been removed successfully",
       });
     } catch (error) {
       addToast({
-        type: 'error',
-        title: 'Delete failed',
-        description: error instanceof Error ? error.message : 'Failed to delete item',
+        type: "error",
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Failed to delete item",
       });
     }
   };
@@ -133,7 +129,7 @@ export function Dashboard() {
           onContainerCreate={actions.createContainer}
           onToast={addToast}
         />
-        
+
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -154,7 +150,7 @@ export function Dashboard() {
         onContainerCreate={actions.createContainer}
         onToast={addToast}
       />
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ContainerGrid
           containers={state.containers}
@@ -180,25 +176,22 @@ export function Dashboard() {
         defaultContainerId={preferences?.default_shelf?.container_id || state.containers[0]?.container_id}
         onCommandSuccess={(response) => {
           addToast({
-            type: 'success',
-            title: 'Voice Command Processed',
+            type: "success",
+            title: "Voice Command Processed",
             description: response.message,
           });
           actions.loadContainers(); // Refresh data
         }}
         onCommandError={(error) => {
           addToast({
-            type: 'error',
-            title: 'Voice Command Failed',
+            type: "error",
+            title: "Voice Command Failed",
             description: error,
           });
         }}
       />
 
-      <ToastContainer
-        toasts={toasts}
-        onDismiss={dismissToast}
-      />
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
-} 
+}
