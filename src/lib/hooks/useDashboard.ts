@@ -46,6 +46,73 @@ export function useDashboard() {
     };
   }, []);
 
+  const refreshTokenIfNeeded = useCallback(async (): Promise<boolean> => {
+    const token = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!token || !refreshToken) {
+      setState(prev => ({ ...prev, isAuthenticated: false }));
+      return false;
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000);
+      const expiry = payload.exp;
+      
+      if (expiry - now < 300) {
+        console.log('🔄 Refreshing expired token...');
+        
+        const response = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('refresh_token', data.refresh_token);
+          console.log('✅ Token refreshed successfully');
+          return true;
+        } else {
+          console.log('❌ Token refresh failed');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+          setState(prev => ({ ...prev, isAuthenticated: false }));
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking/refreshing token:', error);
+      setState(prev => ({ ...prev, isAuthenticated: false }));
+      return false;
+    }
+  }, []);
+
+  const getAuthHeadersWithRefresh = useCallback(async (): Promise<HeadersInit | null> => {
+    const tokenIsValid = await refreshTokenIfNeeded();
+    if (!tokenIsValid) {
+      return null;
+    }
+    
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setState(prev => ({ ...prev, isAuthenticated: false }));
+      return null;
+    }
+    
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  }, [refreshTokenIfNeeded]);
+
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem('access_token');
     const user = localStorage.getItem('user');
@@ -67,7 +134,7 @@ export function useDashboard() {
       console.log('📦 Loading containers...');
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch('/api/containers', { headers });
@@ -95,7 +162,7 @@ export function useDashboard() {
         isLoading: false 
       }));
     }
-  }, [getAuthHeaders]);
+  }, [getAuthHeadersWithRefresh]);
 
   const searchItems = useCallback(async (query: string) => {
     if (query.length < 2) {
@@ -106,7 +173,7 @@ export function useDashboard() {
     try {
       setState(prev => ({ ...prev, searchQuery: query, isSearching: true }));
       
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) {
         setState(prev => ({ ...prev, isSearching: false }));
         return;
@@ -133,12 +200,12 @@ export function useDashboard() {
         error: 'Search failed'
       }));
     }
-  }, [getAuthHeaders]);
+  }, [getAuthHeadersWithRefresh]);
 
   const createContainer = useCallback(async (data: CreateContainerCommandDTO) => {
     try {
       console.log('➕ Creating container:', data);
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch('/api/containers', {
@@ -164,11 +231,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to create container'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const updateContainer = useCallback(async (id: string, data: UpdateContainerCommandDTO) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/containers/${id}`, {
@@ -188,11 +255,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to update container'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const deleteContainer = useCallback(async (id: string) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/containers/${id}`, {
@@ -211,11 +278,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to delete container'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const addShelf = useCallback(async (containerId: string, data: CreateShelfCommandDTO) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/containers/${containerId}/shelves`, {
@@ -235,11 +302,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to add shelf'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const updateShelf = useCallback(async (shelfId: string, data: UpdateShelfCommandDTO) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/shelves/${shelfId}`, {
@@ -259,11 +326,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to update shelf'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const deleteShelf = useCallback(async (shelfId: string) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/shelves/${shelfId}`, {
@@ -282,11 +349,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to delete shelf'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const addItem = useCallback(async (shelfId: string, data: AddItemCommandDTO) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/shelves/${shelfId}/items`, {
@@ -306,11 +373,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to add item'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const updateItemQuantity = useCallback(async (itemId: string, data: UpdateItemQuantityCommandDTO) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/items/${itemId}`, {
@@ -330,11 +397,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to update item quantity'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const removeItemQuantity = useCallback(async (itemId: string, data: RemoveItemQuantityCommandDTO) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/items/${itemId}/remove`, {
@@ -354,11 +421,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to remove item quantity'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const deleteItem = useCallback(async (itemId: string) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/items/${itemId}`, {
@@ -377,11 +444,11 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to delete item'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const moveItem = useCallback(async (itemId: string, data: MoveItemCommandDTO) => {
     try {
-      const headers = getAuthHeaders();
+      const headers = await getAuthHeadersWithRefresh();
       if (!headers) return;
 
       const response = await fetch(`/api/items/${itemId}/move`, {
@@ -401,7 +468,7 @@ export function useDashboard() {
         error: error instanceof Error ? error.message : 'Failed to move item'
       }));
     }
-  }, [getAuthHeaders, loadContainers]);
+  }, [getAuthHeadersWithRefresh, loadContainers]);
 
   // Initialize on mount
   useEffect(() => {

@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, Minus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import type { Item } from '@/types';
 import type { Toast } from '@/lib/hooks/useToasts';
 
@@ -147,22 +141,14 @@ export function ItemRow({
           <Plus className="h-3 w-3" />
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <MoreVertical className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem 
-              onClick={handleDelete}
-              className="text-red-600"
-            >
-              <Trash2 className="mr-2 h-3 w-3" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleDelete}
+          className="h-6 w-6 p-0 text-red-600"
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
       </div>
     </div>
   );
