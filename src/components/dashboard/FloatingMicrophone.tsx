@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Mic, MicOff } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { Mic, MicOff, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { VoiceProcessCommandDTO, VoiceProcessResponseDTO } from '@/types';
 
@@ -8,7 +8,6 @@ interface VoiceState {
   isProcessing: boolean;
   hasPermission: boolean | null;
   error: string | null;
-  progress: number;
 }
 
 interface FloatingMicrophoneProps {
@@ -22,229 +21,228 @@ export function FloatingMicrophone({
   onCommandSuccess,
   onCommandError,
 }: FloatingMicrophoneProps) {
-  const [voiceState, setVoiceState] = useState<VoiceState>({
+  const [state, setState] = useState<VoiceState>({
     isRecording: false,
     isProcessing: false,
     hasPermission: null,
     error: null,
-    progress: 0,
   });
 
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  // Check for Web Speech API support and permissions
-  useEffect(() => {
-    const checkSupport = async () => {
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        setVoiceState(prev => ({ 
-          ...prev, 
-          hasPermission: false, 
-          error: 'Speech recognition not supported' 
-        }));
-        return;
-      }
+  // Request microphone permission and start recording
+  const startRecording = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, error: null, isRecording: true }));
 
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-        setVoiceState(prev => ({ ...prev, hasPermission: true }));
-      } catch (error) {
-        setVoiceState(prev => ({ 
-          ...prev, 
-          hasPermission: false, 
-          error: 'Microphone permission denied' 
-        }));
-      }
-    };
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000
+        } 
+      });
+      
+      streamRef.current = stream;
+      setState(prev => ({ ...prev, hasPermission: true }));
 
-    checkSupport();
+      // Set up MediaRecorder
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        setState(prev => ({ ...prev, isRecording: false, isProcessing: true }));
+        
+        // Create audio blob
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.log('🎵 Audio recorded:', { size: audioBlob.size, type: audioBlob.type });
+
+        // Stop and cleanup stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+
+        // Process the recorded audio
+        await processAudio(audioBlob);
+      };
+
+      // Start recording
+      mediaRecorder.start();
+      console.log('🎤 Recording started...');
+
+    } catch (error) {
+      console.error('❌ Microphone access error:', error);
+      setState(prev => ({ 
+        ...prev, 
+        isRecording: false,
+        hasPermission: false,
+        error: error instanceof Error ? error.message : 'Microphone access denied'
+      }));
+    }
   }, []);
 
-  // Initialize speech recognition
-  useEffect(() => {
-    if (voiceState.hasPermission) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onstart = () => {
-        setVoiceState(prev => ({ ...prev, isRecording: true, error: null }));
-        startProgressTimer();
-      };
-
-      recognition.onend = () => {
-        setVoiceState(prev => ({ ...prev, isRecording: false, progress: 0 }));
-        clearProgressTimer();
-      };
-
-      recognition.onerror = (event) => {
-        setVoiceState(prev => ({ 
-          ...prev, 
-          isRecording: false, 
-          error: `Speech recognition error: ${event.error}`,
-          progress: 0 
-        }));
-        clearProgressTimer();
-        onCommandError?.(`Speech recognition error: ${event.error}`);
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        processVoiceCommand(transcript);
-      };
-
-      setRecognition(recognition);
+  // Stop recording
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      console.log('🛑 Recording stopped');
     }
-  }, [voiceState.hasPermission]);
+  }, []);
 
-  const startProgressTimer = () => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 100 / 30; // 30 second timeout
-      setVoiceState(prev => ({ ...prev, progress }));
-      
-      if (progress >= 100) {
-        clearInterval(interval);
-        recognition?.stop();
-      }
-    }, 1000);
-    
-    setProgressInterval(interval);
-  };
-
-  const clearProgressTimer = () => {
-    if (progressInterval) {
-      clearInterval(progressInterval);
-      setProgressInterval(null);
-    }
-  };
-
-  const processVoiceCommand = async (transcript: string) => {
-    setVoiceState(prev => ({ ...prev, isProcessing: true }));
-    
+  // Process recorded audio through Whisper + voice command
+  const processAudio = useCallback(async (audioBlob: Blob) => {
     try {
-      const command: VoiceProcessCommandDTO = {
-        command: transcript,
-        context: {
-          default_container_id: defaultContainerId,
-        },
-      };
+      // Step 1: Transcribe audio to text using Whisper
+      console.log('📝 Transcribing audio...');
+      
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
 
-      const response = await fetch('/api/voice/process', {
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const transcribeResponse = await fetch('/api/voice/transcribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(command),
+        headers,
+        body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error('Voice command processing failed');
+      if (!transcribeResponse.ok) {
+        const errorData = await transcribeResponse.json();
+        throw new Error(errorData.error || 'Transcription failed');
       }
 
-      const result: VoiceProcessResponseDTO = await response.json();
+      const transcriptionData = await transcribeResponse.json();
+      const transcript = transcriptionData.transcript;
       
-      if (result.success) {
-        onCommandSuccess?.(result);
-      } else {
-        onCommandError?.(result.message);
+      console.log('✅ Transcription:', transcript);
+
+      // Step 2: Process the transcribed command
+      console.log('🤖 Processing voice command...');
+
+      const commandDTO: VoiceProcessCommandDTO = {
+        command: transcript,
+        context: defaultContainerId ? { default_container_id: defaultContainerId } : undefined,
+      };
+
+      const processResponse = await fetch('/api/voice/process', {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(commandDTO),
+      });
+
+      if (!processResponse.ok) {
+        const errorData = await processResponse.json();
+        throw new Error(errorData.error || 'Command processing failed');
       }
+
+      const responseData: VoiceProcessResponseDTO = await processResponse.json();
+      console.log('✅ Command processed:', responseData);
+
+      setState(prev => ({ ...prev, isProcessing: false, error: null }));
+      
+      // Call success callback
+      if (onCommandSuccess) {
+        onCommandSuccess(responseData);
+      }
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Voice command failed';
-      setVoiceState(prev => ({ ...prev, error: errorMessage }));
-      onCommandError?.(errorMessage);
-    } finally {
-      setVoiceState(prev => ({ ...prev, isProcessing: false }));
+      console.error('❌ Audio processing error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      setState(prev => ({ 
+        ...prev, 
+        isProcessing: false, 
+        error: errorMessage 
+      }));
+      
+      if (onCommandError) {
+        onCommandError(errorMessage);
+      }
     }
+  }, [defaultContainerId, onCommandSuccess, onCommandError]);
+
+  // Toggle recording
+  const toggleRecording = useCallback(() => {
+    if (state.isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }, [state.isRecording, startRecording, stopRecording]);
+
+  // Determine button appearance
+  const getButtonContent = () => {
+    if (state.isProcessing) {
+      return <Loader2 className="h-6 w-6 animate-spin" />;
+    }
+    
+    if (state.error) {
+      return <AlertCircle className="h-6 w-6 text-red-500" />;
+    }
+    
+    if (state.isRecording) {
+      return <MicOff className="h-6 w-6 text-red-500" />;
+    }
+    
+    return <Mic className="h-6 w-6" />;
   };
 
-  const handleMicrophoneClick = useCallback(() => {
-    if (!recognition || !voiceState.hasPermission) {
-      onCommandError?.('Speech recognition not available');
-      return;
+  const getButtonClass = () => {
+    let baseClass = "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-50";
+    
+    if (state.isRecording) {
+      return `${baseClass} bg-red-500 hover:bg-red-600 text-white animate-pulse`;
     }
-
-    if (voiceState.isRecording) {
-      recognition.stop();
-    } else if (!voiceState.isProcessing) {
-      recognition.start();
+    
+    if (state.error) {
+      return `${baseClass} bg-red-100 hover:bg-red-200 border-2 border-red-300`;
     }
-  }, [recognition, voiceState.hasPermission, voiceState.isRecording, voiceState.isProcessing, onCommandError]);
+    
+    if (state.isProcessing) {
+      return `${baseClass} bg-blue-500 text-white cursor-not-allowed`;
+    }
+    
+    return `${baseClass} bg-primary hover:bg-primary/90 text-primary-foreground`;
+  };
 
-  // Don't render if no permission or not supported
-  if (voiceState.hasPermission === false) {
-    return null;
-  }
-
-  const isActive = voiceState.isRecording || voiceState.isProcessing;
-  const buttonColor = voiceState.isRecording 
-    ? 'bg-red-500 hover:bg-red-600' 
-    : voiceState.isProcessing 
-    ? 'bg-yellow-500 hover:bg-yellow-600'
-    : 'bg-blue-500 hover:bg-blue-600';
+  const getTitle = () => {
+    if (state.isProcessing) return "Processing audio...";
+    if (state.error) return `Error: ${state.error}`;
+    if (state.isRecording) return "Click to stop recording";
+    if (state.hasPermission === false) return "Click to request microphone permission";
+    return "Click to start voice command";
+  };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <div className="relative">
-        {/* Progress ring */}
-        {voiceState.isRecording && (
-          <svg
-            className="absolute inset-0 w-16 h-16 transform -rotate-90"
-            viewBox="0 0 64 64"
-          >
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-              className="text-gray-200"
-            />
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-              strokeDasharray={`${2 * Math.PI * 28}`}
-              strokeDashoffset={`${2 * Math.PI * 28 * (1 - voiceState.progress / 100)}`}
-              className="text-red-500 transition-all duration-1000 ease-linear"
-            />
-          </svg>
-        )}
-        
-        <Button
-          onClick={handleMicrophoneClick}
-          disabled={voiceState.hasPermission === null}
-          className={`w-16 h-16 rounded-full shadow-lg transition-all duration-200 ${buttonColor} ${
-            isActive ? 'scale-110' : 'hover:scale-105'
-          }`}
-        >
-          {voiceState.isRecording ? (
-            <MicOff className="h-6 w-6 text-white" />
-          ) : (
-            <Mic className="h-6 w-6 text-white" />
-          )}
-        </Button>
-
-        {/* Status indicator */}
-        {isActive && (
-          <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-green-400 animate-pulse" />
-        )}
-      </div>
-
-      {/* Tooltip */}
-      <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity">
-        {voiceState.isRecording 
-          ? 'Recording... Click to stop' 
-          : voiceState.isProcessing 
-          ? 'Processing...' 
-          : 'Click to record voice command'}
-      </div>
-    </div>
+    <Button
+      onClick={toggleRecording}
+      disabled={state.isProcessing}
+      className={getButtonClass()}
+      title={getTitle()}
+      size="icon"
+    >
+      {getButtonContent()}
+    </Button>
   );
 } 
