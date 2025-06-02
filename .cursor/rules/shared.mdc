@@ -16,6 +16,9 @@ alwaysApply: true
 - Tailwind 4
 - Shadcn/ui
 
+## Server IP URL
+http://localhost:3000/
+
 ## Project Structure
 
 When introducing changes to the project, always follow the directory structure below:

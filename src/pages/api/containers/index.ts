@@ -14,7 +14,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
 
     // Get containers using service
     const containerService = new ContainerService(locals.supabase);
-    const containers = await containerService.getUserContainers();
+    const containers = await containerService.getUserContainers(authResult.user_id!);
 
     const response: ContainerListResponseDTO = {
       containers,

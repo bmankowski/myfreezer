@@ -90,7 +90,7 @@ export interface ContainerContentsDTO {
 
 /** Response wrapper for container list */
 export interface ContainerListResponseDTO {
-  containers: ContainerSummaryDTO[];
+  containers: ContainerDetailsDTO[];
 }
 
 // ============================================================================

@@ -1,12 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
 import type {
-  ContainerSummaryDTO,
+  ContainerDetailsDTO,
+  ShelfWithItemsDTO,
   ContainerDTO,
   CreateContainerEntity,
   CreateContainerCommandDTO,
-  ContainerDetailsDTO,
-  ShelfWithItemsDTO,
   UpdateContainerCommandDTO,
   UpdateContainerEntity,
   DeleteResponseDTO,
@@ -17,54 +16,68 @@ export class ContainerService {
   constructor(private supabase: SupabaseClient<Database>) {}
 
   /**
-   * Get all containers for the authenticated user with counts
+   * Get containers for a specific user with shelves and item counts
    */
-  async getUserContainers(): Promise<ContainerSummaryDTO[]> {
-    const { data, error } = await this.supabase.from("containers").select(`
+  async getUserContainers(userId: string): Promise<ContainerDetailsDTO[]> {
+    const { data, error } = await this.supabase
+      .from("containers")
+      .select(
+        `
         container_id,
         name,
         type,
         created_at,
-        shelves!inner(
+        shelves(
           shelf_id,
-          items(item_id)
+          name,
+          position,
+          created_at,
+          items(
+            item_id,
+            name,
+            quantity,
+            created_at
+          )
         )
-      `);
+      `
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
 
     if (error) {
       throw new Error(`Failed to fetch containers: ${error.message}`);
     }
 
-    // Transform data to include counts
-    const containerMap = new Map<string, ContainerSummaryDTO>();
+    // Transform data to match ContainerDetailsDTO format
+    return data.map((container) => {
+      // Transform shelves data
+      const shelfWithItems: ShelfWithItemsDTO[] = (container.shelves || [])
+        .sort((a, b) => a.position - b.position)
+        .map((shelf) => ({
+          shelf_id: shelf.shelf_id,
+          name: shelf.name,
+          position: shelf.position,
+          created_at: shelf.created_at,
+          items: (shelf.items || []).map((item) => ({
+            item_id: item.item_id,
+            name: item.name,
+            quantity: item.quantity,
+            created_at: item.created_at,
+          })),
+        }));
 
-    for (const container of data) {
-      const containerId = container.container_id;
+      // Calculate total items
+      const total_items = shelfWithItems.reduce((total, shelf) => total + shelf.items.length, 0);
 
-      if (!containerMap.has(containerId)) {
-        containerMap.set(containerId, {
-          container_id: container.container_id,
-          name: container.name,
-          type: container.type,
-          created_at: container.created_at,
-          shelves_count: 0,
-          items_count: 0,
-        });
-      }
-
-      const containerSummary = containerMap.get(containerId)!;
-
-      // Count shelves and items
-      if (container.shelves) {
-        containerSummary.shelves_count = container.shelves.length;
-        containerSummary.items_count = container.shelves.reduce(
-          (total, shelf) => total + (shelf.items?.length || 0),
-          0
-        );
-      }
-    }
-
-    return Array.from(containerMap.values());
+      return {
+        container_id: container.container_id,
+        name: container.name,
+        type: container.type,
+        created_at: container.created_at,
+        shelves: shelfWithItems,
+        total_items,
+      };
+    });
   }
 
   /**

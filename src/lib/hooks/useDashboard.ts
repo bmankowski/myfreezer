@@ -4,6 +4,7 @@ import type {
   ItemWithLocationDTO,
   ItemSearchParams,
   UpdateContainerCommandDTO,
+  CreateContainerCommandDTO,
   CreateShelfCommandDTO,
   UpdateShelfCommandDTO,
   AddItemCommandDTO,
@@ -63,6 +64,7 @@ export function useDashboard() {
 
   const loadContainers = useCallback(async () => {
     try {
+      console.log('📦 Loading containers...');
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const headers = getAuthHeaders();
@@ -79,12 +81,14 @@ export function useDashboard() {
       }
       
       const data = await response.json();
+      console.log('📦 Containers loaded:', { count: data.containers?.length || 0, containers: data.containers });
       setState(prev => ({ 
         ...prev, 
         containers: data.containers || [],
         isLoading: false 
       }));
     } catch (error) {
+      console.error('📦 Failed to load containers:', error);
       setState(prev => ({ 
         ...prev, 
         error: error instanceof Error ? error.message : 'Failed to load containers',
@@ -130,6 +134,37 @@ export function useDashboard() {
       }));
     }
   }, [getAuthHeaders]);
+
+  const createContainer = useCallback(async (data: CreateContainerCommandDTO) => {
+    try {
+      console.log('➕ Creating container:', data);
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
+      const response = await fetch('/api/containers', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create container');
+      }
+
+      const result = await response.json();
+      console.log('➕ Container created successfully:', result);
+      
+      console.log('🔄 Refreshing containers list...');
+      await loadContainers(); // Refresh data
+    } catch (error) {
+      console.error('➕ Failed to create container:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Failed to create container'
+      }));
+    }
+  }, [getAuthHeaders, loadContainers]);
 
   const updateContainer = useCallback(async (id: string, data: UpdateContainerCommandDTO) => {
     try {
@@ -371,6 +406,7 @@ export function useDashboard() {
     actions: {
       loadContainers,
       searchItems,
+      createContainer,
       updateContainer,
       deleteContainer,
       addShelf,

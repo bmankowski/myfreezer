@@ -90,6 +90,7 @@ export function Dashboard() {
         <ContainerGrid
           containers={state.containers}
           searchQuery={state.searchQuery}
+          onContainerCreate={actions.createContainer}
           onContainerUpdate={actions.updateContainer}
           onContainerDelete={actions.deleteContainer}
           onShelfAdd={actions.addShelf}
