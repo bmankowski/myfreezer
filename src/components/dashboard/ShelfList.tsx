@@ -50,7 +50,6 @@ export function ShelfList({
         <ShelfSection
           key={shelf.shelf_id}
           shelf={shelf}
-          containerId={containerId}
           searchQuery={searchQuery}
           onUpdate={(data) => onShelfUpdate(shelf.shelf_id, data)}
           onDelete={() => onShelfDelete(shelf.shelf_id)}

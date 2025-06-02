@@ -143,6 +143,9 @@ export function ContainerCard({
             onShelfUpdate={onShelfUpdate}
             onShelfDelete={onShelfDelete}
             onItemAdd={onItemAdd}
+            onItemQuantityUpdate={onItemQuantityUpdate}
+            onItemQuantityRemove={onItemQuantityRemove}
+            onItemDelete={onItemDelete}
             onToast={onToast}
           />
           
