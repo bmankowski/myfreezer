@@ -378,7 +378,7 @@ export function useDashboard() {
   const updateItemQuantity = useCallback(async (itemId: string, data: UpdateItemQuantityCommandDTO) => {
     try {
       const headers = await getAuthHeadersWithRefresh();
-      if (!headers) return;
+      if (!headers) return null;
 
       const response = await fetch(`/api/items/${itemId}`, {
         method: 'PUT',
@@ -390,19 +390,22 @@ export function useDashboard() {
         throw new Error('Failed to update item quantity');
       }
 
+      const result = await response.json();
       await loadContainers(); // Refresh data
+      return result;
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
         error: error instanceof Error ? error.message : 'Failed to update item quantity'
       }));
+      throw error;
     }
   }, [getAuthHeadersWithRefresh, loadContainers]);
 
   const removeItemQuantity = useCallback(async (itemId: string, data: RemoveItemQuantityCommandDTO) => {
     try {
       const headers = await getAuthHeadersWithRefresh();
-      if (!headers) return;
+      if (!headers) return null;
 
       const response = await fetch(`/api/items/${itemId}/remove`, {
         method: 'PATCH',
@@ -414,12 +417,15 @@ export function useDashboard() {
         throw new Error('Failed to remove item quantity');
       }
 
+      const result = await response.json();
       await loadContainers(); // Refresh data
+      return result;
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
         error: error instanceof Error ? error.message : 'Failed to remove item quantity'
       }));
+      throw error;
     }
   }, [getAuthHeadersWithRefresh, loadContainers]);
 

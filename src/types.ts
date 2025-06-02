@@ -29,6 +29,14 @@ export interface Item {
   created_at: string;
 }
 
+/** Base UserPreferences entity from the database */
+export interface UserPreferences {
+  user_id: string;
+  default_shelf_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ============================================================================
 // Common Response Types
 // ============================================================================
@@ -411,4 +419,39 @@ export interface ResendVerificationCommandDTO {
 /** Resend verification email response */
 export interface ResendVerificationResponseDTO {
   message: string;
+}
+
+// ============================================================================
+// User Preferences DTOs and Commands
+// ============================================================================
+
+/** User preferences response */
+export interface UserPreferencesDTO {
+  user_id: string;
+  default_shelf_id: string | null;
+  default_shelf?: {
+    shelf_id: string;
+    name: string;
+    position: number;
+    container_id: string;
+    container_name: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Set default shelf command */
+export interface SetDefaultShelfCommandDTO {
+  shelf_id: string;
+}
+
+/** Set default shelf response */
+export interface SetDefaultShelfResponseDTO {
+  message: string;
+  default_shelf: {
+    shelf_id: string;
+    name: string;
+    position: number;
+    container_name: string;
+  };
 }

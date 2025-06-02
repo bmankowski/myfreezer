@@ -22,7 +22,7 @@ export function useToasts() {
     setToasts(prev => [...prev, newToast]);
 
     // Auto-dismiss after duration
-    if (newToast.duration > 0) {
+    if (newToast.duration && newToast.duration > 0) {
       setTimeout(() => {
         dismissToast(id);
       }, newToast.duration);

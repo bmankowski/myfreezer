@@ -3,7 +3,8 @@ import { ShelfSection } from './ShelfSection';
 import type { 
   ShelfWithItemsDTO,
   UpdateShelfCommandDTO,
-  AddItemCommandDTO
+  AddItemCommandDTO,
+  UserPreferencesDTO
 } from '@/types';
 import type { Toast } from '@/lib/hooks/useToasts';
 
@@ -11,12 +12,14 @@ interface ShelfListProps {
   shelves: ShelfWithItemsDTO[];
   containerId: string;
   searchQuery?: string;
+  userPreferences?: UserPreferencesDTO | null;
   onShelfUpdate: (shelfId: string, data: UpdateShelfCommandDTO) => void;
   onShelfDelete: (shelfId: string) => void;
   onItemAdd: (shelfId: string, data: AddItemCommandDTO) => void;
   onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
   onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
+  onSetAsDefault?: (shelfId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, 'id'>) => void;
 }
 
@@ -24,12 +27,14 @@ export function ShelfList({
   shelves,
   containerId,
   searchQuery,
+  userPreferences,
   onShelfUpdate,
   onShelfDelete,
   onItemAdd,
   onItemQuantityUpdate,
   onItemQuantityRemove,
   onItemDelete,
+  onSetAsDefault,
   onToast,
 }: ShelfListProps) {
   // Sort shelves by position
@@ -51,12 +56,14 @@ export function ShelfList({
           key={shelf.shelf_id}
           shelf={shelf}
           searchQuery={searchQuery}
+          isDefault={userPreferences?.default_shelf_id === shelf.shelf_id}
           onUpdate={(data) => onShelfUpdate(shelf.shelf_id, data)}
           onDelete={() => onShelfDelete(shelf.shelf_id)}
           onItemAdd={(data) => onItemAdd(shelf.shelf_id, data)}
           onItemQuantityUpdate={onItemQuantityUpdate}
           onItemQuantityRemove={onItemQuantityRemove}
           onItemDelete={onItemDelete}
+          onSetAsDefault={onSetAsDefault}
           onToast={onToast}
         />
       ))}

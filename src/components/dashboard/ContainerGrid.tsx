@@ -7,6 +7,7 @@ import type {
   UpdateShelfCommandDTO,
   AddItemCommandDTO,
   ItemWithLocationDTO,
+  UserPreferencesDTO,
 } from "@/types";
 import type { Toast } from "@/lib/hooks/useToasts";
 
@@ -15,6 +16,7 @@ interface ContainerGridProps {
   searchQuery?: string;
   searchResults?: ItemWithLocationDTO[];
   isSearching?: boolean;
+  userPreferences?: UserPreferencesDTO | null;
   onContainerUpdate: (id: string, data: UpdateContainerCommandDTO) => void;
   onContainerDelete: (id: string) => void;
   onShelfAdd: (containerId: string, data: CreateShelfCommandDTO) => void;
@@ -24,6 +26,7 @@ interface ContainerGridProps {
   onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
   onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
+  onSetAsDefault?: (shelfId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, "id">) => void;
 }
 
@@ -32,6 +35,7 @@ export function ContainerGrid({
   searchQuery,
   searchResults,
   isSearching,
+  userPreferences,
   onContainerUpdate,
   onContainerDelete,
   onShelfAdd,
@@ -41,6 +45,7 @@ export function ContainerGrid({
   onItemQuantityUpdate,
   onItemQuantityRemove,
   onItemDelete,
+  onSetAsDefault,
   onToast,
 }: ContainerGridProps) {
   // Filter containers based on search query
@@ -78,7 +83,7 @@ export function ContainerGrid({
     );
   }
 
-  // Show no results message when searching but no containers match
+  // Show no results state when searching
   if (searchQuery && searchQuery.length >= 2 && filteredContainers.length === 0) {
     return (
       <div className="text-center py-12">
@@ -89,12 +94,14 @@ export function ContainerGrid({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={1}
-                d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.08-2.33"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
           </div>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No items found</h3>
-          <p className="mt-1 text-sm text-gray-500">No containers have items matching &ldquo;{searchQuery}&rdquo;.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No results found</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            No items found matching &ldquo;{searchQuery}&rdquo;. Try a different search term.
+          </p>
         </div>
       </div>
     );
@@ -156,6 +163,7 @@ export function ContainerGrid({
             key={container.container_id}
             container={container}
             searchQuery={searchQuery}
+            userPreferences={userPreferences}
             onUpdate={(data) => onContainerUpdate(container.container_id, data)}
             onDelete={() => onContainerDelete(container.container_id)}
             onShelfAdd={(data) => onShelfAdd(container.container_id, data)}
@@ -165,6 +173,7 @@ export function ContainerGrid({
             onItemQuantityUpdate={onItemQuantityUpdate}
             onItemQuantityRemove={onItemQuantityRemove}
             onItemDelete={onItemDelete}
+            onSetAsDefault={onSetAsDefault}
             onToast={onToast}
           />
         ))}

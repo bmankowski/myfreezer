@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDashboard } from '@/lib/hooks/useDashboard';
+import { useUserPreferences } from '@/lib/hooks/useUserPreferences';
 import { useToasts } from '@/lib/hooks/useToasts';
 import { Header } from './dashboard/Header';
 import { ContainerGrid } from './dashboard/ContainerGrid';
@@ -9,12 +10,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function Dashboard() {
   const { state, actions } = useDashboard();
+  const { preferences, setDefaultShelf } = useUserPreferences();
   const { toasts, addToast, dismissToast } = useToasts();
 
   console.log('🏠 Dashboard state:', { 
     isAuthenticated: state.isAuthenticated, 
     isLoading: state.isLoading,
-    containersCount: state.containers.length 
+    containersCount: state.containers.length,
+    defaultShelf: preferences?.default_shelf?.name
   });
 
   // Handle authentication redirect
@@ -35,47 +38,112 @@ export function Dashboard() {
     }
   }, [state.error, addToast]);
 
-  // Show loading skeleton while checking auth or loading data
-  if (state.isAuthenticated === null || state.isLoading) {
+  const handleSetAsDefault = async (shelfId: string) => {
+    try {
+      await setDefaultShelf(shelfId);
+    } catch (error) {
+      // Error will be handled by the useUserPreferences hook and component
+      throw error;
+    }
+  };
+
+  const handleItemQuantityUpdate = async (itemId: string, quantity: number) => {
+    try {
+      const result = await actions.updateItemQuantity(itemId, { quantity });
+      if (result) {
+        addToast({
+          type: 'success',
+          title: 'Item updated',
+          description: `Quantity updated successfully`,
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Update failed',
+        description: error instanceof Error ? error.message : 'Failed to update item',
+      });
+    }
+  };
+
+  const handleItemQuantityRemove = async (itemId: string, quantity: number) => {
+    try {
+      const result = await actions.removeItemQuantity(itemId, { quantity });
+      if (result) {
+        addToast({
+          type: 'success',
+          title: result.action === 'deleted' ? 'Item removed' : 'Item updated',
+          description: result.action === 'deleted' 
+            ? `${result.name} was completely removed`
+            : `Quantity reduced to ${result.quantity}`,
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Remove failed', 
+        description: error instanceof Error ? error.message : 'Failed to remove quantity',
+      });
+    }
+  };
+
+  const handleItemDelete = async (itemId: string) => {
+    try {
+      await actions.deleteItem(itemId);
+      addToast({
+        type: 'success',
+        title: 'Item deleted',
+        description: 'Item has been removed successfully',
+      });
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Delete failed',
+        description: error instanceof Error ? error.message : 'Failed to delete item',
+      });
+    }
+  };
+
+  // Show loading state for unauthenticated users
+  if (state.isAuthenticated === null) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-10 w-64" />
-              <Skeleton className="h-8 w-8 rounded-full" />
-            </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-96 w-full" />
-            ))}
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="space-y-4 w-full max-w-md">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
       </div>
     );
   }
 
-  // Redirect if not authenticated
+  // Don't render anything if not authenticated (will redirect)
   if (state.isAuthenticated === false) {
     return null;
   }
 
-  // Create wrapper functions for item operations
-  const handleItemQuantityUpdate = async (itemId: string, quantity: number) => {
-    await actions.updateItemQuantity(itemId, { quantity });
-  };
-
-  const handleItemQuantityRemove = async (itemId: string, quantity: number) => {
-    await actions.removeItemQuantity(itemId, { quantity });
-  };
-
-  const handleItemDelete = async (itemId: string) => {
-    await actions.deleteItem(itemId);
-  };
+  // Show loading state while containers are loading
+  if (state.isLoading && state.containers.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          onSearch={actions.searchItems}
+          isSearching={state.isSearching}
+          searchQuery={state.searchQuery}
+          onContainerCreate={actions.createContainer}
+          onToast={addToast}
+        />
+        
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-64 w-full" />
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,6 +161,7 @@ export function Dashboard() {
           searchQuery={state.searchQuery}
           searchResults={state.searchResults}
           isSearching={state.isSearching}
+          userPreferences={preferences}
           onContainerUpdate={actions.updateContainer}
           onContainerDelete={actions.deleteContainer}
           onShelfAdd={actions.addShelf}
@@ -102,12 +171,13 @@ export function Dashboard() {
           onItemQuantityUpdate={handleItemQuantityUpdate}
           onItemQuantityRemove={handleItemQuantityRemove}
           onItemDelete={handleItemDelete}
+          onSetAsDefault={handleSetAsDefault}
           onToast={addToast}
         />
       </main>
 
       <FloatingMicrophone
-        defaultContainerId={state.containers[0]?.container_id}
+        defaultContainerId={preferences?.default_shelf?.container_id || state.containers[0]?.container_id}
         onCommandSuccess={(response) => {
           addToast({
             type: 'success',

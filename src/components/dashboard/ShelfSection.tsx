@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Trash2, Edit, MoreHorizontal } from "lucide-react";
+import { Plus, Trash2, Edit, MoreHorizontal, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,28 +16,33 @@ import type { Toast } from "@/lib/hooks/useToasts";
 interface ShelfSectionProps {
   shelf: ShelfWithItemsDTO;
   searchQuery?: string;
+  isDefault?: boolean;
   onUpdate: (data: UpdateShelfCommandDTO) => void;
   onDelete: () => void;
   onItemAdd: (data: AddItemCommandDTO) => void;
   onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
   onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
+  onSetAsDefault?: (shelfId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, "id">) => void;
 }
 
 export function ShelfSection({
   shelf,
   searchQuery,
+  isDefault = false,
   onUpdate,
   onDelete,
   onItemAdd,
   onItemQuantityUpdate,
   onItemQuantityRemove,
   onItemDelete,
+  onSetAsDefault,
   onToast,
 }: ShelfSectionProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+  const [isSettingDefault, setIsSettingDefault] = useState(false);
 
   const isEmpty = shelf.items.length === 0;
 
@@ -81,6 +86,28 @@ export function ShelfSection({
     setIsAddItemModalOpen(false);
   };
 
+  const handleSetAsDefault = async () => {
+    if (!onSetAsDefault || isDefault) return;
+
+    try {
+      setIsSettingDefault(true);
+      await onSetAsDefault(shelf.shelf_id);
+      onToast({
+        type: "success",
+        title: "Default shelf set",
+        description: `${shelf.name} is now your default shelf`,
+      });
+    } catch (error) {
+      onToast({
+        type: "error",
+        title: "Failed to set default shelf",
+        description: error instanceof Error ? error.message : "An error occurred",
+      });
+    } finally {
+      setIsSettingDefault(false);
+    }
+  };
+
   // Filter items based on search query
   const filteredItems =
     searchQuery && searchQuery.length >= 2
@@ -94,13 +121,39 @@ export function ShelfSection({
 
   return (
     <>
-      <div className="border border-gray-200 rounded-lg bg-gray-50 flex">
+      <div
+        className={`border rounded-lg bg-gray-50 flex cursor-pointer transition-all hover:shadow-md ${
+          isDefault ? "border-yellow-300 bg-yellow-50 shadow-sm" : "border-gray-200"
+        }`}
+        onClick={handleSetAsDefault}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleSetAsDefault();
+          }
+        }}
+      >
         {/* Vertical Shelf Name on Left */}
-        <div className="flex-shrink-0 w-10 bg-gray-200 rounded-l-lg flex flex-col items-center justify-between relative py-3">
-          {/* Shelf Name - positioned in upper area */}
-          <div className="flex-1 flex items-center justify-center mt-8">
+        <div
+          className={`flex-shrink-0 w-10 rounded-l-lg flex flex-col items-center justify-between relative py-3 ${
+            isDefault ? "bg-yellow-200" : "bg-gray-200"
+          }`}
+        >
+          {/* Default indicator - positioned at top */}
+          {isDefault && (
+            <div className="flex-shrink-0 mb-2">
+              <Star className="h-3 w-3 text-yellow-600 fill-current" />
+            </div>
+          )}
+
+          {/* Shelf Name - positioned in center area */}
+          <div className="flex-1 flex items-center justify-center">
             <div
-              className="transform -rotate-90 whitespace-nowrap text-sm font-medium text-gray-700"
+              className={`transform -rotate-90 whitespace-nowrap text-sm font-medium ${
+                isDefault ? "text-yellow-800" : "text-gray-700"
+              }`}
               style={{
                 transformOrigin: "center",
               }}
@@ -110,19 +163,48 @@ export function ShelfSection({
           </div>
 
           {/* Dropdown Menu - positioned at bottom */}
-          <div className="flex-shrink-0 mt-8">
+          <div className="flex-shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => e.stopPropagation()} // Prevent triggering shelf click
+                >
                   <MoreHorizontal className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                {onSetAsDefault && !isDefault && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSetAsDefault();
+                    }}
+                    disabled={isSettingDefault}
+                  >
+                    <Star className="mr-2 h-3 w-3" />
+                    {isSettingDefault ? "Setting..." : "Set as Default"}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditModalOpen(true);
+                  }}
+                >
                   <Edit className="mr-2 h-3 w-3" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDelete} disabled={!isEmpty} className="text-red-600">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  disabled={!isEmpty}
+                  className="text-red-600"
+                >
                   <Trash2 className="mr-2 h-3 w-3" />
                   Delete
                 </DropdownMenuItem>
@@ -132,7 +214,11 @@ export function ShelfSection({
         </div>
 
         {/* Main Shelf Content */}
-        <div className="flex-1 p-3">
+        <div
+          className="flex-1 p-3"
+          onClick={(e) => e.stopPropagation()} // Prevent triggering shelf click
+          role="none" // This element doesn't need interactive behavior
+        >
           {/* Items */}
           <ItemList
             items={filteredItems}
@@ -147,7 +233,10 @@ export function ShelfSection({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsAddItemModalOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsAddItemModalOpen(true);
+            }}
             className="w-full mt-2 h-8 text-xs"
           >
             <Plus className="mr-1 h-3 w-3" />

@@ -16,13 +16,15 @@ import type {
   UpdateContainerCommandDTO,
   CreateShelfCommandDTO,
   UpdateShelfCommandDTO,
-  AddItemCommandDTO
+  AddItemCommandDTO,
+  UserPreferencesDTO
 } from '@/types';
 import type { Toast } from '@/lib/hooks/useToasts';
 
 interface ContainerCardProps {
   container: ContainerDetailsDTO;
   searchQuery?: string;
+  userPreferences?: UserPreferencesDTO | null;
   onUpdate: (data: UpdateContainerCommandDTO) => void;
   onDelete: () => void;
   onShelfAdd: (data: CreateShelfCommandDTO) => void;
@@ -32,12 +34,14 @@ interface ContainerCardProps {
   onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
   onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
+  onSetAsDefault?: (shelfId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, 'id'>) => void;
 }
 
 export function ContainerCard({
   container,
   searchQuery,
+  userPreferences,
   onUpdate,
   onDelete,
   onShelfAdd,
@@ -47,6 +51,7 @@ export function ContainerCard({
   onItemQuantityUpdate,
   onItemQuantityRemove,
   onItemDelete,
+  onSetAsDefault,
   onToast,
 }: ContainerCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -140,12 +145,14 @@ export function ContainerCard({
             shelves={container.shelves}
             containerId={container.container_id}
             searchQuery={searchQuery}
+            userPreferences={userPreferences}
             onShelfUpdate={onShelfUpdate}
             onShelfDelete={onShelfDelete}
             onItemAdd={onItemAdd}
             onItemQuantityUpdate={onItemQuantityUpdate}
             onItemQuantityRemove={onItemQuantityRemove}
             onItemDelete={onItemDelete}
+            onSetAsDefault={onSetAsDefault}
             onToast={onToast}
           />
           

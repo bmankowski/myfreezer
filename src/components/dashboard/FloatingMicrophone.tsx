@@ -139,7 +139,7 @@ export function FloatingMicrophone({
 
       const commandDTO: VoiceProcessCommandDTO = {
         command: transcript,
-        context: defaultContainerId ? { default_container_id: defaultContainerId } : undefined,
+        context: defaultContainerId ? { default_container_id: defaultContainerId } : {},
       };
 
       const processResponse = await fetch('/api/voice/process', {
