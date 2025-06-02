@@ -4,17 +4,17 @@ First, carefully review the following documents:
 
 Product Requirements Document (PRD):
 <prd>
-@3-prd.md
+@.ai/documents/3-prd.md
 </prd>
 
 API Plan:
 <api_plan>
-@8-api-plan.md
+@.ai/documents/8-api-plan.md
 </api_plan>
 
 Session Notes:
 <session_notes>
-@13-ui-resume-ui-planning-session.md
+@.ai/documents/13-ui-resume-of-planning-session.md
 </session_notes>
 
 Your task is to create a detailed UI architecture that includes the necessary views, user journey mapping, navigation structure, and key elements for each view. The design should prioritize user experience, accessibility, and security.
@@ -82,5 +82,5 @@ Present the final UI architecture in the following Markdown format:
 
 Focus solely on UI architecture, user journeys, navigation, and key elements for each view. Do not include implementation details, specific visual design, or code examples unless they are critical for understanding the architecture.
 
-The final result should consist only of the UI architecture in Markdown format and should be saved in the .ai/14-ui-plan.md file.
+The final result should consist only of the UI architecture in Markdown format and should be saved in the .ai/documents/14-ui-plan.md file.
 Do not duplicate or repeat any work already done in the thinking block.

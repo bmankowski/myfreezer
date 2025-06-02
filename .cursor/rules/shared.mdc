@@ -3,10 +3,11 @@ description:
 globs: 
 alwaysApply: true
 ---
-# AI Rules for {app-name}
-
-{project-description}
-
+---
+description: 
+globs: 
+alwaysApply: true
+---
 ## Tech Stack
 
 - Astro 5

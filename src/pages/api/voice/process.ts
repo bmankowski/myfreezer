@@ -1,8 +1,8 @@
-import type { APIRoute } from 'astro';
-import type { VoiceProcessCommandDTO } from '../../../types.js';
-import { VoiceService } from '../../../lib/services/voice.service.js';
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from '../../../lib/auth.utils.js';
-import { isValidString } from '../../../lib/validation.utils.js';
+import type { APIRoute } from "astro";
+import type { VoiceProcessCommandDTO } from "../../../types.js";
+import { VoiceService } from "../../../lib/services/voice.service.js";
+import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { isValidString } from "../../../lib/validation.utils.js";
 
 // POST /api/voice/process - Process voice command with AI
 export const POST: APIRoute = async ({ locals, request }) => {
@@ -10,7 +10,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     // Validate authentication
     const authResult = await validateAuthToken(request, locals.supabase);
     if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || 'Unauthorized');
+      return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Parse request body
@@ -18,27 +18,27 @@ export const POST: APIRoute = async ({ locals, request }) => {
     try {
       body = await request.json();
     } catch {
-      return createErrorResponse(400, 'Invalid JSON body');
+      return createErrorResponse(400, "Invalid JSON body");
     }
 
     // Validate command
     if (!isValidString(body.command)) {
-      return createErrorResponse(400, 'Command is required and must be a non-empty string');
+      return createErrorResponse(400, "Command is required and must be a non-empty string");
     }
 
     // Validate context if provided
     if (body.context?.default_container_id && !isValidString(body.context.default_container_id)) {
-      return createErrorResponse(400, 'Invalid default_container_id format');
+      return createErrorResponse(400, "Invalid default_container_id format");
     }
 
     // Sanitize command (basic cleanup)
     const sanitizedCommand = body.command.trim();
     if (sanitizedCommand.length === 0) {
-      return createErrorResponse(400, 'Command cannot be empty');
+      return createErrorResponse(400, "Command cannot be empty");
     }
 
     if (sanitizedCommand.length > 500) {
-      return createErrorResponse(400, 'Command too long (max 500 characters)');
+      return createErrorResponse(400, "Command too long (max 500 characters)");
     }
 
     // Process voice command using service
@@ -49,25 +49,25 @@ export const POST: APIRoute = async ({ locals, request }) => {
     });
 
     // Return appropriate status based on result
-    if (!result.success && result.message.includes('clarification')) {
+    if (!result.success && result.message.includes("clarification")) {
       return createErrorResponse(422, result.message, result);
     }
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error('Voice command processing error:', error);
-    
+    console.error("Voice command processing error:", error);
+
     // Handle specific error types
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    if (errorMessage.includes('AI service') || errorMessage.includes('OpenRouter')) {
-      return createErrorResponse(503, 'AI service temporarily unavailable');
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+    if (errorMessage.includes("AI service") || errorMessage.includes("OpenRouter")) {
+      return createErrorResponse(503, "AI service temporarily unavailable");
     }
-    
-    if (errorMessage.includes('rate limit')) {
-      return createErrorResponse(429, 'Too many requests, please try again later');
+
+    if (errorMessage.includes("rate limit")) {
+      return createErrorResponse(429, "Too many requests, please try again later");
     }
-    
-    return createErrorResponse(500, 'Internal server error');
+
+    return createErrorResponse(500, "Internal server error");
   }
-}; 
+};

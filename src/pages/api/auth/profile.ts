@@ -1,7 +1,7 @@
-import type { APIRoute } from 'astro';
-import { updateProfileSchema } from '../../../lib/schemas/auth.schemas.js';
-import { AuthService } from '../../../lib/services/auth.service.js';
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from '../../../lib/auth.utils.js';
+import type { APIRoute } from "astro";
+import { updateProfileSchema } from "../../../lib/schemas/auth.schemas.js";
+import { AuthService } from "../../../lib/services/auth.service.js";
+import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
 
 // GET /api/auth/profile - Get current user profile
 export const GET: APIRoute = async ({ locals, request }) => {
@@ -9,7 +9,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
     // Validate authentication
     const authResult = await validateAuthToken(request, locals.supabase);
     if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || 'Unauthorized');
+      return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Get user profile using service
@@ -18,15 +18,15 @@ export const GET: APIRoute = async ({ locals, request }) => {
 
     return createSuccessResponse(userProfile);
   } catch (error) {
-    console.error('Get profile error:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Failed to get user profile';
-    
-    if (errorMessage.includes('User not found')) {
-      return createErrorResponse(404, 'User profile not found');
+    console.error("Get profile error:", error);
+
+    const errorMessage = error instanceof Error ? error.message : "Failed to get user profile";
+
+    if (errorMessage.includes("User not found")) {
+      return createErrorResponse(404, "User profile not found");
     }
-    
-    return createErrorResponse(500, 'Internal server error');
+
+    return createErrorResponse(500, "Internal server error");
   }
 };
 
@@ -36,7 +36,7 @@ export const PUT: APIRoute = async ({ locals, request }) => {
     // Validate authentication
     const authResult = await validateAuthToken(request, locals.supabase);
     if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || 'Unauthorized');
+      return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Parse request body
@@ -44,15 +44,13 @@ export const PUT: APIRoute = async ({ locals, request }) => {
     try {
       body = await request.json();
     } catch {
-      return createErrorResponse(400, 'Invalid JSON body');
+      return createErrorResponse(400, "Invalid JSON body");
     }
 
     // Validate request body with Zod
     const validationResult = updateProfileSchema.safeParse(body);
     if (!validationResult.success) {
-      const errors = validationResult.error.errors.map(err => 
-        `${err.path.join('.')}: ${err.message}`
-      ).join(', ');
+      const errors = validationResult.error.errors.map((err) => `${err.path.join(".")}: ${err.message}`).join(", ");
       return createErrorResponse(400, `Validation failed: ${errors}`);
     }
 
@@ -64,18 +62,18 @@ export const PUT: APIRoute = async ({ locals, request }) => {
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error('Update profile error:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Profile update failed';
-    
-    if (errorMessage.includes('invalid email')) {
-      return createErrorResponse(400, 'Please provide a valid email address');
+    console.error("Update profile error:", error);
+
+    const errorMessage = error instanceof Error ? error.message : "Profile update failed";
+
+    if (errorMessage.includes("invalid email")) {
+      return createErrorResponse(400, "Please provide a valid email address");
     }
-    
-    if (errorMessage.includes('already exists') || errorMessage.includes('already registered')) {
-      return createErrorResponse(409, 'An account with this email already exists');
+
+    if (errorMessage.includes("already exists") || errorMessage.includes("already registered")) {
+      return createErrorResponse(409, "An account with this email already exists");
     }
-    
-    return createErrorResponse(500, 'Internal server error');
+
+    return createErrorResponse(500, "Internal server error");
   }
-}; 
+};

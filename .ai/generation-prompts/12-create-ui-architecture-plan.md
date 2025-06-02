@@ -3,11 +3,11 @@ You are an AI assistant tasked with helping plan the user interface architecture
 Please carefully review the following information:
 
 <product_requirements>
-@3-prd.md
+@.ai/documents/3-prd.md
 </product_requirements>
 
 <tech_stack>
-@4-tech-stack.md
+@.ai/documents/tech-stack.md
 </tech_stack>
 
 <api_plan>

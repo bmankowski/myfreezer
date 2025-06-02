@@ -1,14 +1,19 @@
 You are an AI assistant tasked with summarizing the conversation about planning the UI architecture for an MVP and preparing a concise summary for the next development stage. The conversation history contains the following information:
 
     Product Requirements Document (PRD)
+    .ai/documents/3-prd.md
 
     Information about the tech stack
+    .ai/documents/tech-stack.md
 
     API plan
+    .ai/documents/8-api-plan.md
 
     Conversation history containing questions and answers
+    .ai/documents/11-ui-questions-answers
 
     UI architecture recommendations
+    .ai/documents/12-ui-architecture-plan.md
 
 Your task is to:
 

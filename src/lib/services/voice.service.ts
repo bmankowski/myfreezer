@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '../../db/database.types.js';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../db/database.types.js";
 import type {
   VoiceProcessCommandDTO,
   VoiceProcessResponseDTO,
@@ -9,24 +9,24 @@ import type {
   VoiceQueryResponseDTO,
   VoiceQueryItemDTO,
   ItemLocationDTO,
-} from '../../types.js';
-import { AIService } from './ai.service.js';
-import { ContainerService } from './container.service.js';
-import { ShelfService } from './shelf.service.js';
-import { ItemService } from './item.service.js';
+} from "../../types.js";
+import { AIService } from "./ai.service.js";
+import { ContainerService } from "./container.service.js";
+import { ShelfService } from "./shelf.service.js";
+import { ItemService } from "./item.service.js";
 
 interface ActionContext {
-  containers: Array<{
+  containers: {
     container_id: string;
     name: string;
-    type: 'freezer' | 'fridge';
-  }>;
-  shelves: Array<{
+    type: "freezer" | "fridge";
+  }[];
+  shelves: {
     shelf_id: string;
     name: string;
     position: number;
     container_id: string;
-  }>;
+  }[];
 }
 
 export class VoiceService {
@@ -75,7 +75,7 @@ export class VoiceService {
       // Generate AI response
       const aiResponse = await this.aiService.generateQueryResponse(
         command.query,
-        searchResults.items.map(item => ({
+        searchResults.items.map((item) => ({
           name: item.name,
           quantity: item.quantity,
           shelf_name: item.shelf.name,
@@ -90,12 +90,12 @@ export class VoiceService {
         ai_response: aiResponse,
       };
     } catch (error) {
-      console.error('Voice query processing error:', error);
+      console.error("Voice query processing error:", error);
       return {
         found: false,
         items: [],
-        message: 'Wystąpił błąd podczas wyszukiwania',
-        ai_response: 'Nie mogę teraz wyszukać przedmiotów',
+        message: "Wystąpił błąd podczas wyszukiwania",
+        ai_response: "Nie mogę teraz wyszukać przedmiotów",
       };
     }
   }
@@ -133,8 +133,8 @@ export class VoiceService {
         try {
           const actionResult = await this.executeAction(parsedAction, context);
           actions.push(actionResult);
-          
-          if (actionResult.status === 'success') {
+
+          if (actionResult.status === "success") {
             messages.push(this.generateActionMessage(actionResult));
           } else {
             overallSuccess = false;
@@ -143,22 +143,23 @@ export class VoiceService {
           overallSuccess = false;
           actions.push({
             type: parsedAction.type,
-            status: 'failed',
+            status: "failed",
             details: {
               item_name: parsedAction.item_name,
               quantity: parsedAction.quantity,
-              shelf_name: 'Nieznana',
-              container_name: 'Nieznany',
+              shelf_name: "Nieznana",
+              container_name: "Nieznany",
             },
           });
         }
       }
 
-      const finalMessage = messages.length > 0 
-        ? messages.join('. ') 
-        : overallSuccess 
-          ? 'Operacja zakończona pomyślnie'
-          : 'Wystąpiły błędy podczas wykonywania operacji';
+      const finalMessage =
+        messages.length > 0
+          ? messages.join(". ")
+          : overallSuccess
+            ? "Operacja zakończona pomyślnie"
+            : "Wystąpiły błędy podczas wykonywania operacji";
 
       return {
         success: overallSuccess,
@@ -167,23 +168,24 @@ export class VoiceService {
         ai_response: aiResult.message,
       };
     } catch (error) {
-      console.error('Voice command processing error:', error);
+      console.error("Voice command processing error:", error);
       return {
         success: false,
         actions: [],
-        message: 'Wystąpił błąd podczas przetwarzania polecenia',
-        ai_response: 'Nie mogę przetworzyć tego polecenia',
+        message: "Wystąpił błąd podczas przetwarzania polecenia",
+        ai_response: "Nie mogę przetworzyć tego polecenia",
       };
     }
   }
 
   private extractSearchTermFromQuery(query: string): string {
     // Simple extraction - in production, this could be enhanced with AI
-    const cleanQuery = query.toLowerCase()
-      .replace(/czy mam|co mam|gdzie jest|ile mam|sprawdź/g, '')
-      .replace(/\?/g, '')
+    const cleanQuery = query
+      .toLowerCase()
+      .replace(/czy mam|co mam|gdzie jest|ile mam|sprawdź/g, "")
+      .replace(/\?/g, "")
       .trim();
-    
+
     return cleanQuery || query;
   }
 
@@ -192,17 +194,16 @@ export class VoiceService {
 
     for (const item of items) {
       const key = item.name.toLowerCase();
-      
+
       if (itemMap.has(key)) {
         const existing = itemMap.get(key)!;
         existing.quantity += item.quantity;
-        
+
         // Add location if not already present
-        const locationExists = existing.locations.some(loc => 
-          loc.container_name === item.container.name && 
-          loc.shelf_name === item.shelf.name
+        const locationExists = existing.locations.some(
+          (loc) => loc.container_name === item.container.name && loc.shelf_name === item.shelf.name
         );
-        
+
         if (!locationExists) {
           existing.locations.push({
             container_name: item.container.name,
@@ -214,11 +215,13 @@ export class VoiceService {
         itemMap.set(key, {
           name: item.name,
           quantity: item.quantity,
-          locations: [{
-            container_name: item.container.name,
-            shelf_name: item.shelf.name,
-            shelf_position: item.shelf.position,
-          }],
+          locations: [
+            {
+              container_name: item.container.name,
+              shelf_name: item.shelf.name,
+              shelf_position: item.shelf.position,
+            },
+          ],
         });
       }
     }
@@ -228,15 +231,16 @@ export class VoiceService {
 
   private generateQueryMessage(items: VoiceQueryItemDTO[], originalQuery: string): string {
     if (items.length === 0) {
-      return 'Nie znaleziono pasujących przedmiotów';
+      return "Nie znaleziono pasujących przedmiotów";
     }
 
     if (items.length === 1) {
       const item = items[0];
-      const locationDesc = item.locations.length === 1 
-        ? `na ${item.locations[0].shelf_name} w ${item.locations[0].container_name}`
-        : `w ${item.locations.length} miejscach`;
-      
+      const locationDesc =
+        item.locations.length === 1
+          ? `na ${item.locations[0].shelf_name} w ${item.locations[0].container_name}`
+          : `w ${item.locations.length} miejscach`;
+
       return `Tak, masz ${item.quantity} ${item.name} ${locationDesc}`;
     }
 
@@ -246,25 +250,25 @@ export class VoiceService {
   private async getUserContext(defaultContainerId?: string): Promise<ActionContext> {
     // Get user's containers
     const containers = await this.containerService.getUserContainers();
-    const containerData = containers.map(c => ({
+    const containerData = containers.map((c) => ({
       container_id: c.container_id,
       name: c.name,
       type: c.type,
     }));
 
     // Get shelves for default container or all containers
-    let shelves: Array<{
+    let shelves: {
       shelf_id: string;
       name: string;
       position: number;
       container_id: string;
-    }> = [];
+    }[] = [];
 
     if (defaultContainerId) {
       // Get shelves for specific container
       const containerDetails = await this.containerService.getContainerDetails(defaultContainerId);
       if (containerDetails) {
-        shelves = containerDetails.shelves.map(s => ({
+        shelves = containerDetails.shelves.map((s) => ({
           shelf_id: s.shelf_id,
           name: s.name,
           position: s.position,
@@ -278,7 +282,7 @@ export class VoiceService {
         const firstContainer = containerData[0];
         const containerDetails = await this.containerService.getContainerDetails(firstContainer.container_id);
         if (containerDetails) {
-          shelves = containerDetails.shelves.map(s => ({
+          shelves = containerDetails.shelves.map((s) => ({
             shelf_id: s.shelf_id,
             name: s.name,
             position: s.position,
@@ -300,12 +304,12 @@ export class VoiceService {
     // Resolve shelf
     const shelf = this.resolveShelf(shelf_identifier, container_identifier, context);
     if (!shelf) {
-      throw new Error('Cannot resolve shelf');
+      throw new Error("Cannot resolve shelf");
     }
 
-    const container = context.containers.find(c => c.container_id === shelf.container_id);
+    const container = context.containers.find((c) => c.container_id === shelf.container_id);
     if (!container) {
-      throw new Error('Cannot resolve container');
+      throw new Error("Cannot resolve container");
     }
 
     const details: VoiceActionDetailsDTO = {
@@ -317,66 +321,70 @@ export class VoiceService {
 
     try {
       switch (parsedAction.type) {
-        case 'add_item':
+        case "add_item":
           await this.itemService.addItem(shelf.shelf_id, {
             name: item_name,
             quantity,
           });
           return {
-            type: 'add_item',
-            status: 'success',
+            type: "add_item",
+            status: "success",
             details,
           };
 
-        case 'remove_item':
+        case "remove_item":
           const removeResult = await this.itemService.removeItemQuantity(
             await this.findItemId(item_name, shelf.shelf_id),
             { quantity }
           );
           if (!removeResult) {
-            throw new Error('Item not found');
+            throw new Error("Item not found");
           }
           return {
-            type: 'remove_item',
-            status: 'success',
+            type: "remove_item",
+            status: "success",
             details,
           };
 
-        case 'update_item':
+        case "update_item":
           const updateResult = await this.itemService.updateItemQuantity(
             await this.findItemId(item_name, shelf.shelf_id),
             { quantity }
           );
           if (!updateResult) {
-            throw new Error('Item not found');
+            throw new Error("Item not found");
           }
           return {
-            type: 'update_item',
-            status: 'success',
+            type: "update_item",
+            status: "success",
             details,
           };
 
-        case 'query_item':
+        case "query_item":
           // For queries, we'll just return success - actual search is handled separately
           return {
-            type: 'query_item',
-            status: 'success',
+            type: "query_item",
+            status: "success",
             details,
           };
 
         default:
-          throw new Error('Unknown action type');
+          throw new Error("Unknown action type");
       }
     } catch (error) {
       return {
         type: parsedAction.type,
-        status: 'failed',
+        status: "failed",
         details,
       };
     }
   }
 
-  private resolveShelf(shelfIdentifier: string | undefined, containerIdentifier: string | undefined, context: ActionContext) {
+  private resolveShelf(
+    shelfIdentifier: string | undefined,
+    containerIdentifier: string | undefined,
+    context: ActionContext
+  ) {
     // If no shelf specified, use first shelf of default/first container
     if (!shelfIdentifier) {
       return context.shelves[0] || null;
@@ -385,13 +393,11 @@ export class VoiceService {
     // Try to match by position (numeric)
     const position = parseInt(shelfIdentifier, 10);
     if (!isNaN(position)) {
-      return context.shelves.find(s => s.position === position) || null;
+      return context.shelves.find((s) => s.position === position) || null;
     }
 
     // Try to match by name (case insensitive)
-    return context.shelves.find(s => 
-      s.name.toLowerCase().includes(shelfIdentifier.toLowerCase())
-    ) || null;
+    return context.shelves.find((s) => s.name.toLowerCase().includes(shelfIdentifier.toLowerCase())) || null;
   }
 
   private async findItemId(itemName: string, shelfId: string): Promise<string> {
@@ -402,7 +408,7 @@ export class VoiceService {
     });
 
     if (searchResult.items.length === 0) {
-      throw new Error('Item not found');
+      throw new Error("Item not found");
     }
 
     return searchResult.items[0].item_id;
@@ -410,18 +416,18 @@ export class VoiceService {
 
   private generateActionMessage(action: VoiceActionDTO): string {
     const { type, details } = action;
-    
+
     switch (type) {
-      case 'add_item':
+      case "add_item":
         return `Dodano ${details.quantity} ${details.item_name} na ${details.shelf_name} w ${details.container_name}`;
-      case 'remove_item':
+      case "remove_item":
         return `Usunięto ${details.quantity} ${details.item_name} z ${details.shelf_name} w ${details.container_name}`;
-      case 'update_item':
+      case "update_item":
         return `Zaktualizowano ilość ${details.item_name} na ${details.quantity} na ${details.shelf_name} w ${details.container_name}`;
-      case 'query_item':
+      case "query_item":
         return `Sprawdzono ${details.item_name} na ${details.shelf_name} w ${details.container_name}`;
       default:
-        return 'Operacja wykonana';
+        return "Operacja wykonana";
     }
   }
-} 
+}

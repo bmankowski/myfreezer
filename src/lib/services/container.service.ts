@@ -1,8 +1,8 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '../../db/database.types.js';
-import type { 
-  ContainerSummaryDTO, 
-  ContainerDTO, 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../db/database.types.js";
+import type {
+  ContainerSummaryDTO,
+  ContainerDTO,
   CreateContainerEntity,
   CreateContainerCommandDTO,
   ContainerDetailsDTO,
@@ -10,8 +10,8 @@ import type {
   UpdateContainerCommandDTO,
   UpdateContainerEntity,
   DeleteResponseDTO,
-  ContainerContentsDTO
-} from '../../types.js';
+  ContainerContentsDTO,
+} from "../../types.js";
 
 export class ContainerService {
   constructor(private supabase: SupabaseClient<Database>) {}
@@ -20,9 +20,7 @@ export class ContainerService {
    * Get all containers for the authenticated user with counts
    */
   async getUserContainers(): Promise<ContainerSummaryDTO[]> {
-    const { data, error } = await this.supabase
-      .from('containers')
-      .select(`
+    const { data, error } = await this.supabase.from("containers").select(`
         container_id,
         name,
         type,
@@ -42,7 +40,7 @@ export class ContainerService {
 
     for (const container of data) {
       const containerId = container.container_id;
-      
+
       if (!containerMap.has(containerId)) {
         containerMap.set(containerId, {
           container_id: container.container_id,
@@ -55,12 +53,12 @@ export class ContainerService {
       }
 
       const containerSummary = containerMap.get(containerId)!;
-      
+
       // Count shelves and items
       if (container.shelves) {
         containerSummary.shelves_count = container.shelves.length;
         containerSummary.items_count = container.shelves.reduce(
-          (total, shelf) => total + (shelf.items?.length || 0), 
+          (total, shelf) => total + (shelf.items?.length || 0),
           0
         );
       }
@@ -79,9 +77,9 @@ export class ContainerService {
     };
 
     const { data, error } = await this.supabase
-      .from('containers')
+      .from("containers")
       .insert(entity)
-      .select('container_id, name, type, created_at')
+      .select("container_id, name, type, created_at")
       .single();
 
     if (error) {
@@ -97,9 +95,9 @@ export class ContainerService {
   async getContainerDetails(containerId: string): Promise<ContainerDetailsDTO | null> {
     // First get the container
     const { data: container, error: containerError } = await this.supabase
-      .from('containers')
-      .select('container_id, name, type, created_at')
-      .eq('container_id', containerId)
+      .from("containers")
+      .select("container_id, name, type, created_at")
+      .eq("container_id", containerId)
       .single();
 
     if (containerError || !container) {
@@ -108,8 +106,9 @@ export class ContainerService {
 
     // Then get shelves with items
     const { data: shelves, error: shelvesError } = await this.supabase
-      .from('shelves')
-      .select(`
+      .from("shelves")
+      .select(
+        `
         shelf_id,
         name,
         position,
@@ -120,21 +119,22 @@ export class ContainerService {
           quantity,
           created_at
         )
-      `)
-      .eq('container_id', containerId)
-      .order('position');
+      `
+      )
+      .eq("container_id", containerId)
+      .order("position");
 
     if (shelvesError) {
       throw new Error(`Failed to fetch shelves: ${shelvesError.message}`);
     }
 
     // Transform shelves data
-    const shelfWithItems: ShelfWithItemsDTO[] = (shelves || []).map(shelf => ({
+    const shelfWithItems: ShelfWithItemsDTO[] = (shelves || []).map((shelf) => ({
       shelf_id: shelf.shelf_id,
       name: shelf.name,
       position: shelf.position,
       created_at: shelf.created_at,
-      items: (shelf.items || []).map(item => ({
+      items: (shelf.items || []).map((item) => ({
         item_id: item.item_id,
         name: item.name,
         quantity: item.quantity,
@@ -143,10 +143,7 @@ export class ContainerService {
     }));
 
     // Calculate total items
-    const total_items = shelfWithItems.reduce(
-      (total, shelf) => total + shelf.items.length,
-      0
-    );
+    const total_items = shelfWithItems.reduce((total, shelf) => total + shelf.items.length, 0);
 
     return {
       container_id: container.container_id,
@@ -164,9 +161,9 @@ export class ContainerService {
   async getContainerContents(containerId: string): Promise<ContainerContentsDTO | null> {
     // First get the container basic info
     const { data: container, error: containerError } = await this.supabase
-      .from('containers')
-      .select('container_id, name, type')
-      .eq('container_id', containerId)
+      .from("containers")
+      .select("container_id, name, type")
+      .eq("container_id", containerId)
       .single();
 
     if (containerError || !container) {
@@ -175,8 +172,9 @@ export class ContainerService {
 
     // Then get shelves with items
     const { data: shelves, error: shelvesError } = await this.supabase
-      .from('shelves')
-      .select(`
+      .from("shelves")
+      .select(
+        `
         shelf_id,
         name,
         position,
@@ -187,21 +185,22 @@ export class ContainerService {
           quantity,
           created_at
         )
-      `)
-      .eq('container_id', containerId)
-      .order('position');
+      `
+      )
+      .eq("container_id", containerId)
+      .order("position");
 
     if (shelvesError) {
       throw new Error(`Failed to fetch container contents: ${shelvesError.message}`);
     }
 
     // Transform shelves data
-    const shelfWithItems: ShelfWithItemsDTO[] = (shelves || []).map(shelf => ({
+    const shelfWithItems: ShelfWithItemsDTO[] = (shelves || []).map((shelf) => ({
       shelf_id: shelf.shelf_id,
       name: shelf.name,
       position: shelf.position,
       created_at: shelf.created_at,
-      items: (shelf.items || []).map(item => ({
+      items: (shelf.items || []).map((item) => ({
         item_id: item.item_id,
         name: item.name,
         quantity: item.quantity,
@@ -210,10 +209,7 @@ export class ContainerService {
     }));
 
     // Calculate total items
-    const total_items = shelfWithItems.reduce(
-      (total, shelf) => total + shelf.items.length,
-      0
-    );
+    const total_items = shelfWithItems.reduce((total, shelf) => total + shelf.items.length, 0);
 
     return {
       container: {
@@ -231,7 +227,7 @@ export class ContainerService {
    */
   async updateContainer(containerId: string, command: UpdateContainerCommandDTO): Promise<ContainerDTO | null> {
     const updateData: UpdateContainerEntity = {};
-    
+
     if (command.name !== undefined) {
       updateData.name = command.name;
     }
@@ -240,14 +236,14 @@ export class ContainerService {
     }
 
     const { data, error } = await this.supabase
-      .from('containers')
+      .from("containers")
       .update(updateData)
-      .eq('container_id', containerId)
-      .select('container_id, name, type, created_at')
+      .eq("container_id", containerId)
+      .select("container_id, name, type, created_at")
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         // No rows affected - container not found or not owned by user
         return null;
       }
@@ -263,9 +259,9 @@ export class ContainerService {
   async deleteContainer(containerId: string): Promise<DeleteResponseDTO | null> {
     // First check if container has shelves
     const { data: shelves, error: shelvesError } = await this.supabase
-      .from('shelves')
-      .select('shelf_id')
-      .eq('container_id', containerId)
+      .from("shelves")
+      .select("shelf_id")
+      .eq("container_id", containerId)
       .limit(1);
 
     if (shelvesError) {
@@ -273,21 +269,18 @@ export class ContainerService {
     }
 
     if (shelves && shelves.length > 0) {
-      throw new Error('Container must be empty before deletion');
+      throw new Error("Container must be empty before deletion");
     }
 
     // Delete the container
-    const { error } = await this.supabase
-      .from('containers')
-      .delete()
-      .eq('container_id', containerId);
+    const { error } = await this.supabase.from("containers").delete().eq("container_id", containerId);
 
     if (error) {
       throw new Error(`Failed to delete container: ${error.message}`);
     }
 
     return {
-      message: 'Container deleted successfully',
+      message: "Container deleted successfully",
     };
   }
 
@@ -296,11 +289,11 @@ export class ContainerService {
    */
   async containerExists(containerId: string): Promise<boolean> {
     const { data, error } = await this.supabase
-      .from('containers')
-      .select('container_id')
-      .eq('container_id', containerId)
+      .from("containers")
+      .select("container_id")
+      .eq("container_id", containerId)
       .single();
 
     return !error && !!data;
   }
-} 
+}

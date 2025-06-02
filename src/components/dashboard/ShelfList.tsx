@@ -1,0 +1,66 @@
+import React from 'react';
+import { ShelfSection } from './ShelfSection';
+import type { 
+  ShelfWithItemsDTO,
+  UpdateShelfCommandDTO,
+  AddItemCommandDTO
+} from '@/types';
+import type { Toast } from '@/lib/hooks/useToasts';
+
+interface ShelfListProps {
+  shelves: ShelfWithItemsDTO[];
+  containerId: string;
+  searchQuery?: string;
+  onShelfUpdate: (shelfId: string, data: UpdateShelfCommandDTO) => void;
+  onShelfDelete: (shelfId: string) => void;
+  onItemAdd: (shelfId: string, data: AddItemCommandDTO) => void;
+  onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
+  onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
+  onItemDelete?: (itemId: string) => Promise<void>;
+  onToast: (toast: Omit<Toast, 'id'>) => void;
+}
+
+export function ShelfList({
+  shelves,
+  containerId,
+  searchQuery,
+  onShelfUpdate,
+  onShelfDelete,
+  onItemAdd,
+  onItemQuantityUpdate,
+  onItemQuantityRemove,
+  onItemDelete,
+  onToast,
+}: ShelfListProps) {
+  // Sort shelves by position
+  const sortedShelves = [...shelves].sort((a, b) => a.position - b.position);
+
+  if (shelves.length === 0) {
+    return (
+      <div className="text-center py-6 text-gray-500">
+        <p className="text-sm">No shelves yet</p>
+        <p className="text-xs">Add a shelf to get started</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {sortedShelves.map((shelf) => (
+        <ShelfSection
+          key={shelf.shelf_id}
+          shelf={shelf}
+          containerId={containerId}
+          searchQuery={searchQuery}
+          onUpdate={(data) => onShelfUpdate(shelf.shelf_id, data)}
+          onDelete={() => onShelfDelete(shelf.shelf_id)}
+          onItemAdd={(data) => onItemAdd(shelf.shelf_id, data)}
+          onItemQuantityUpdate={onItemQuantityUpdate}
+          onItemQuantityRemove={onItemQuantityRemove}
+          onItemDelete={onItemDelete}
+          onToast={onToast}
+        />
+      ))}
+    </div>
+  );
+} 

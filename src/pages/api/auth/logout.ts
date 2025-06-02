@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
-import { AuthService } from '../../../lib/services/auth.service.js';
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from '../../../lib/auth.utils.js';
+import type { APIRoute } from "astro";
+import { AuthService } from "../../../lib/services/auth.service.js";
+import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
 
 // POST /api/auth/logout - Sign out user
 export const POST: APIRoute = async ({ locals, request }) => {
@@ -8,12 +8,12 @@ export const POST: APIRoute = async ({ locals, request }) => {
     // Validate authentication
     const authResult = await validateAuthToken(request, locals.supabase);
     if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || 'Unauthorized');
+      return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Extract access token from Authorization header
-    const authHeader = request.headers.get('Authorization');
-    const accessToken = authHeader?.replace('Bearer ', '') || '';
+    const authHeader = request.headers.get("Authorization");
+    const accessToken = authHeader?.replace("Bearer ", "") || "";
 
     // Logout user using service
     const authService = new AuthService(locals.supabase);
@@ -21,13 +21,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error('Logout error:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Logout failed';
-    
+    console.error("Logout error:", error);
+
+    const errorMessage = error instanceof Error ? error.message : "Logout failed";
+
     // Even if logout fails, we still consider it successful from client perspective
     return createSuccessResponse({
-      message: 'Logout successful',
+      message: "Logout successful",
     });
   }
-}; 
+};

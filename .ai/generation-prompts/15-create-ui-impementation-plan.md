@@ -7,7 +7,7 @@ First, review the following inputs:
 
 1. Product Requirements Document (PRD):
    <prd>
-   @3-prd.md
+   @.ai/documents/3-prd.md
    </prd>
 
 2. View Description:

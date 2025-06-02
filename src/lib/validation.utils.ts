@@ -10,7 +10,7 @@ export function isValidUUID(uuid: string): boolean {
  * Validate string is not empty after trimming
  */
 export function isNonEmptyString(value: any): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 /**
@@ -30,6 +30,6 @@ export function isValidLength(value: string, maxLength: number): boolean {
 /**
  * Validate container type
  */
-export function isValidContainerType(type: any): type is 'freezer' | 'fridge' {
-  return type === 'freezer' || type === 'fridge';
-} 
+export function isValidContainerType(type: any): type is "freezer" | "fridge" {
+  return type === "freezer" || type === "fridge";
+}

@@ -1,13 +1,13 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '../../db/database.types.js';
-import type { 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../db/database.types.js";
+import type {
   ShelfDTO,
   CreateShelfCommandDTO,
   CreateShelfEntity,
   UpdateShelfCommandDTO,
   UpdateShelfEntity,
-  DeleteResponseDTO
-} from '../../types.js';
+  DeleteResponseDTO,
+} from "../../types.js";
 
 export class ShelfService {
   constructor(private supabase: SupabaseClient<Database>) {}
@@ -18,13 +18,13 @@ export class ShelfService {
   async createShelf(containerId: string, command: CreateShelfCommandDTO): Promise<ShelfDTO> {
     // First verify the container exists and belongs to user (RLS will handle this)
     const { data: containerCheck, error: containerError } = await this.supabase
-      .from('containers')
-      .select('container_id')
-      .eq('container_id', containerId)
+      .from("containers")
+      .select("container_id")
+      .eq("container_id", containerId)
       .single();
 
     if (containerError || !containerCheck) {
-      throw new Error('Container not found');
+      throw new Error("Container not found");
     }
 
     const entity: CreateShelfEntity = {
@@ -33,15 +33,15 @@ export class ShelfService {
     };
 
     const { data, error } = await this.supabase
-      .from('shelves')
+      .from("shelves")
       .insert(entity)
-      .select('shelf_id, container_id, name, position, created_at')
+      .select("shelf_id, container_id, name, position, created_at")
       .single();
 
     if (error) {
-      if (error.code === '23505') {
+      if (error.code === "23505") {
         // Unique constraint violation (position already exists)
-        throw new Error('Position already exists in this container');
+        throw new Error("Position already exists in this container");
       }
       throw new Error(`Failed to create shelf: ${error.message}`);
     }
@@ -54,7 +54,7 @@ export class ShelfService {
    */
   async updateShelf(shelfId: string, command: UpdateShelfCommandDTO): Promise<ShelfDTO | null> {
     const updateData: UpdateShelfEntity = {};
-    
+
     if (command.name !== undefined) {
       updateData.name = command.name;
     }
@@ -63,20 +63,20 @@ export class ShelfService {
     }
 
     const { data, error } = await this.supabase
-      .from('shelves')
+      .from("shelves")
       .update(updateData)
-      .eq('shelf_id', shelfId)
-      .select('shelf_id, container_id, name, position, created_at')
+      .eq("shelf_id", shelfId)
+      .select("shelf_id, container_id, name, position, created_at")
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         // No rows affected - shelf not found or not owned by user
         return null;
       }
-      if (error.code === '23505') {
+      if (error.code === "23505") {
         // Unique constraint violation (position already exists)
-        throw new Error('Position already exists in this container');
+        throw new Error("Position already exists in this container");
       }
       throw new Error(`Failed to update shelf: ${error.message}`);
     }
@@ -90,9 +90,9 @@ export class ShelfService {
   async deleteShelf(shelfId: string): Promise<DeleteResponseDTO | null> {
     // First check if shelf has items
     const { data: items, error: itemsError } = await this.supabase
-      .from('items')
-      .select('item_id')
-      .eq('shelf_id', shelfId)
+      .from("items")
+      .select("item_id")
+      .eq("shelf_id", shelfId)
       .limit(1);
 
     if (itemsError) {
@@ -100,14 +100,14 @@ export class ShelfService {
     }
 
     if (items && items.length > 0) {
-      throw new Error('Shelf must be empty before deletion');
+      throw new Error("Shelf must be empty before deletion");
     }
 
     // Check if shelf exists and belongs to user (via RLS)
     const { data: shelfCheck, error: shelfError } = await this.supabase
-      .from('shelves')
-      .select('shelf_id')
-      .eq('shelf_id', shelfId)
+      .from("shelves")
+      .select("shelf_id")
+      .eq("shelf_id", shelfId)
       .single();
 
     if (shelfError || !shelfCheck) {
@@ -115,17 +115,14 @@ export class ShelfService {
     }
 
     // Delete the shelf
-    const { error } = await this.supabase
-      .from('shelves')
-      .delete()
-      .eq('shelf_id', shelfId);
+    const { error } = await this.supabase.from("shelves").delete().eq("shelf_id", shelfId);
 
     if (error) {
       throw new Error(`Failed to delete shelf: ${error.message}`);
     }
 
     return {
-      message: 'Shelf deleted successfully',
+      message: "Shelf deleted successfully",
     };
   }
 
@@ -133,12 +130,8 @@ export class ShelfService {
    * Check if shelf exists and belongs to user (via RLS through container)
    */
   async shelfExists(shelfId: string): Promise<boolean> {
-    const { data, error } = await this.supabase
-      .from('shelves')
-      .select('shelf_id')
-      .eq('shelf_id', shelfId)
-      .single();
+    const { data, error } = await this.supabase.from("shelves").select("shelf_id").eq("shelf_id", shelfId).single();
 
     return !error && !!data;
   }
-} 
+}
