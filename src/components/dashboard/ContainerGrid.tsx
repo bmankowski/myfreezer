@@ -51,6 +51,18 @@ export function ContainerGrid({
   const [name, setName] = useState('');
   const [type, setType] = useState<'freezer' | 'fridge'>('freezer');
 
+  // Filter containers based on search query
+  const filteredContainers = searchQuery && searchQuery.length >= 2
+    ? containers.filter(container => {
+        // Check if any item in any shelf matches the search query
+        return container.shelves.some(shelf =>
+          shelf.items.some(item =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        );
+      })
+    : containers;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -66,6 +78,7 @@ export function ContainerGrid({
     });
   };
 
+  // Show empty state for no containers (when not searching)
   if (containers.length === 0) {
     return (
       <div className="text-center py-12">
@@ -129,10 +142,85 @@ export function ContainerGrid({
     );
   }
 
+  // Show no results message when searching but no containers match
+  if (searchQuery && searchQuery.length >= 2 && filteredContainers.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gray-900">My Containers</h2>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Container
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Container</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Container Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g., Main Freezer, Kitchen Fridge"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type">Type</Label>
+                  <Select value={type} onValueChange={(value: 'freezer' | 'fridge') => setType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="freezer">❄️ Freezer</SelectItem>
+                      <SelectItem value="fridge">🧊 Fridge</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Create Container</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        <div className="text-center py-12">
+          <div className="mx-auto max-w-md">
+            <div className="mx-auto h-12 w-12 text-gray-400">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.08-2.33" />
+              </svg>
+            </div>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No items found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              No containers have items matching "{searchQuery}".
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">My Containers</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          My Containers
+          {searchQuery && searchQuery.length >= 2 && (
+            <span className="ml-2 text-base font-normal text-gray-500">
+              ({filteredContainers.length} containing "{searchQuery}")
+            </span>
+          )}
+        </h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -179,7 +267,7 @@ export function ContainerGrid({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {containers.map((container) => (
+        {filteredContainers.map((container) => (
           <ContainerCard
             key={container.container_id}
             container={container}
