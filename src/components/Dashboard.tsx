@@ -81,16 +81,18 @@ export function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header
         onSearch={actions.searchItems}
-        searchResults={state.searchResults}
         isSearching={state.isSearching}
         searchQuery={state.searchQuery}
+        onContainerCreate={actions.createContainer}
+        onToast={addToast}
       />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ContainerGrid
           containers={state.containers}
           searchQuery={state.searchQuery}
-          onContainerCreate={actions.createContainer}
+          searchResults={state.searchResults}
+          isSearching={state.isSearching}
           onContainerUpdate={actions.updateContainer}
           onContainerDelete={actions.deleteContainer}
           onShelfAdd={actions.addShelf}

@@ -1,25 +1,20 @@
-import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { ContainerCard } from './ContainerCard';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { 
-  ContainerDetailsDTO, 
+import React from "react";
+import { ContainerCard } from "./ContainerCard";
+import type {
+  ContainerDetailsDTO,
   UpdateContainerCommandDTO,
-  CreateContainerCommandDTO,
   CreateShelfCommandDTO,
   UpdateShelfCommandDTO,
-  AddItemCommandDTO
-} from '@/types';
-import type { Toast } from '@/lib/hooks/useToasts';
+  AddItemCommandDTO,
+  ItemWithLocationDTO,
+} from "@/types";
+import type { Toast } from "@/lib/hooks/useToasts";
 
 interface ContainerGridProps {
   containers: ContainerDetailsDTO[];
   searchQuery?: string;
-  onContainerCreate: (data: CreateContainerCommandDTO) => void;
+  searchResults?: ItemWithLocationDTO[];
+  isSearching?: boolean;
   onContainerUpdate: (id: string, data: UpdateContainerCommandDTO) => void;
   onContainerDelete: (id: string) => void;
   onShelfAdd: (containerId: string, data: CreateShelfCommandDTO) => void;
@@ -29,13 +24,14 @@ interface ContainerGridProps {
   onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
   onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
-  onToast: (toast: Omit<Toast, 'id'>) => void;
+  onToast: (toast: Omit<Toast, "id">) => void;
 }
 
 export function ContainerGrid({
   containers,
   searchQuery,
-  onContainerCreate,
+  searchResults,
+  isSearching,
   onContainerUpdate,
   onContainerDelete,
   onShelfAdd,
@@ -47,36 +43,16 @@ export function ContainerGrid({
   onItemDelete,
   onToast,
 }: ContainerGridProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [type, setType] = useState<'freezer' | 'fridge'>('freezer');
-
   // Filter containers based on search query
-  const filteredContainers = searchQuery && searchQuery.length >= 2
-    ? containers.filter(container => {
-        // Check if any item in any shelf matches the search query
-        return container.shelves.some(shelf =>
-          shelf.items.some(item =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        );
-      })
-    : containers;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    onContainerCreate({ name: name.trim(), type });
-    setName('');
-    setType('freezer');
-    setIsDialogOpen(false);
-    onToast({
-      type: 'success',
-      title: 'Container Created',
-      description: `${name} has been added successfully.`,
-    });
-  };
+  const filteredContainers =
+    searchQuery && searchQuery.length >= 2
+      ? containers.filter((container) => {
+          // Check if any item in any shelf matches the search query
+          return container.shelves.some((shelf) =>
+            shelf.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+          );
+        })
+      : containers;
 
   // Show empty state for no containers (when not searching)
   if (containers.length === 0) {
@@ -85,58 +61,18 @@ export function ContainerGrid({
         <div className="mx-auto max-w-md">
           <div className="mx-auto h-12 w-12 text-gray-400">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
             </svg>
           </div>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No containers</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Get started by creating your first container.
+            Get started by creating your first container using the &ldquo;Add Container&rdquo; button in the header.
           </p>
-          <div className="mt-6">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Container
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Container</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Container Name</Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g., Main Freezer, Kitchen Fridge"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="type">Type</Label>
-                    <Select value={type} onValueChange={(value: 'freezer' | 'fridge') => setType(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="freezer">❄️ Freezer</SelectItem>
-                        <SelectItem value="fridge">🧊 Fridge</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">Create Container</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
         </div>
       </div>
     );
@@ -145,66 +81,20 @@ export function ContainerGrid({
   // Show no results message when searching but no containers match
   if (searchQuery && searchQuery.length >= 2 && filteredContainers.length === 0) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">My Containers</h2>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Container
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Container</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Container Name</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., Main Freezer, Kitchen Fridge"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="type">Type</Label>
-                  <Select value={type} onValueChange={(value: 'freezer' | 'fridge') => setType(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="freezer">❄️ Freezer</SelectItem>
-                      <SelectItem value="fridge">🧊 Fridge</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">Create Container</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        
-        <div className="text-center py-12">
-          <div className="mx-auto max-w-md">
-            <div className="mx-auto h-12 w-12 text-gray-400">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.08-2.33" />
-              </svg>
-            </div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No items found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              No containers have items matching "{searchQuery}".
-            </p>
+      <div className="text-center py-12">
+        <div className="mx-auto max-w-md">
+          <div className="mx-auto h-12 w-12 text-gray-400">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.08-2.33"
+              />
+            </svg>
           </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No items found</h3>
+          <p className="mt-1 text-sm text-gray-500">No containers have items matching &ldquo;{searchQuery}&rdquo;.</p>
         </div>
       </div>
     );
@@ -212,60 +102,54 @@ export function ContainerGrid({
 
   return (
     <div className="space-y-6">
+      {/* Search Results Section */}
+      {searchQuery && searchQuery.length >= 2 && searchResults && searchResults.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-medium text-blue-900">Search Results for &ldquo;{searchQuery}&rdquo;</h3>
+            <span className="text-sm text-blue-600">{searchResults.length} items found</span>
+          </div>
+          <div className="grid gap-3">
+            {searchResults.map((item) => (
+              <div
+                key={item.item_id}
+                className="bg-white border border-blue-200 rounded-md p-3 hover:bg-blue-50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900">{item.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {item.container.name} → {item.shelf.name} • Qty: {item.quantity}
+                    </p>
+                  </div>
+                  <div className="text-lg">{item.container.type === "freezer" ? "❄️" : "🧊"}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Loading indicator for search */}
+      {searchQuery && searchQuery.length >= 2 && isSearching && (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-500">Searching...</p>
+        </div>
+      )}
+
+      {/* Containers Section */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">
           My Containers
           {searchQuery && searchQuery.length >= 2 && (
             <span className="ml-2 text-base font-normal text-gray-500">
-              ({filteredContainers.length} containing "{searchQuery}")
+              ({filteredContainers.length} containing &ldquo;{searchQuery}&rdquo;)
             </span>
           )}
         </h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Container
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Container</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Container Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Main Freezer, Kitchen Fridge"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="type">Type</Label>
-                <Select value={type} onValueChange={(value: 'freezer' | 'fridge') => setType(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="freezer">❄️ Freezer</SelectItem>
-                    <SelectItem value="fridge">🧊 Fridge</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Create Container</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredContainers.map((container) => (
           <ContainerCard
@@ -287,4 +171,4 @@ export function ContainerGrid({
       </div>
     </div>
   );
-} 
+}

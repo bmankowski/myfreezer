@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Search, X, User, LogOut } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from "react";
+import { Search, X, User, LogOut, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,27 +9,35 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { useDebounce } from '@/lib/hooks/useDebounce';
-import type { ItemWithLocationDTO } from '@/types';
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+import type { CreateContainerCommandDTO } from "@/types";
+import type { Toast } from "@/lib/hooks/useToasts";
 
 interface HeaderProps {
   onSearch: (query: string) => void;
-  searchResults?: ItemWithLocationDTO[];
   isSearching?: boolean;
   searchQuery: string;
+  onContainerCreate: (data: CreateContainerCommandDTO) => void;
+  onToast: (toast: Omit<Toast, "id">) => void;
 }
 
-export function Header({ onSearch, searchResults, isSearching, searchQuery }: HeaderProps) {
+export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, onToast }: HeaderProps) {
   const [localQuery, setLocalQuery] = useState(searchQuery);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ firstName?: string; lastName?: string; email?: string } | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [type, setType] = useState<"freezer" | "fridge">("freezer");
   const debouncedQuery = useDebounce(localQuery, 300);
 
-  console.log('🏠 Header rendering:', { user, hasToken: !!localStorage.getItem('access_token') });
+  console.log("🏠 Header rendering:", { user, hasToken: !!localStorage.getItem("access_token") });
 
   // Get user info from localStorage
   useEffect(() => {
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem("user");
     if (userData) {
       setUser(JSON.parse(userData));
     }
@@ -41,19 +49,34 @@ export function Header({ onSearch, searchResults, isSearching, searchQuery }: He
   }, [debouncedQuery, onSearch]);
 
   const handleClearSearch = () => {
-    setLocalQuery('');
+    setLocalQuery("");
   };
 
   const handleSignOut = () => {
     // Clear all auth data from localStorage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    
-    console.log('🔐 User logged out, tokens cleared');
-    
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+
+    console.log("🔐 User logged out, tokens cleared");
+
     // Redirect to login page
-    window.location.href = '/login';
+    window.location.href = "/login";
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    onContainerCreate({ name: name.trim(), type });
+    setName("");
+    setType("freezer");
+    setIsDialogOpen(false);
+    onToast({
+      type: "success",
+      title: "Container Created",
+      description: `${name} has been added successfully.`,
+    });
   };
 
   return (
@@ -79,14 +102,11 @@ export function Header({ onSearch, searchResults, isSearching, searchQuery }: He
                 className="pl-10 pr-10"
               />
               {localQuery && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
+                <button onClick={handleClearSearch} className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                 </button>
               )}
-              
+
               {/* Search loading indicator */}
               {isSearching && (
                 <div className="absolute inset-y-0 right-8 flex items-center">
@@ -94,34 +114,56 @@ export function Header({ onSearch, searchResults, isSearching, searchQuery }: He
                 </div>
               )}
             </div>
-
-            {/* Search Results Dropdown */}
-            {localQuery.length >= 2 && searchResults && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
-                {searchResults.map((item) => (
-                  <div
-                    key={item.item_id}
-                    className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900">{item.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {item.container.name} → {item.shelf.name} • Qty: {item.quantity}
-                        </p>
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {item.container.type === 'freezer' ? '❄️' : '🧊'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* User Menu */}
-          <div className="flex items-center">
+          {/* Actions and User Menu */}
+          <div className="flex items-center space-x-3">
+            {/* Add Container Button */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Container
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Container</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Container Name</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g., Main Freezer, Kitchen Fridge"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="type">Type</Label>
+                    <Select value={type} onValueChange={(value: "freezer" | "fridge") => setType(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="freezer">❄️ Freezer</SelectItem>
+                        <SelectItem value="fridge">🧊 Fridge</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">Create Container</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="relative h-8 w-8 rounded-full">
@@ -132,14 +174,11 @@ export function Header({ onSearch, searchResults, isSearching, searchQuery }: He
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {user?.firstName || user?.lastName ? 
-                        `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
-                        'User'
-                      }
+                      {user?.firstName || user?.lastName
+                        ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+                        : "User"}
                     </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email || 'No email'}
-                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">{user?.email || "No email"}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -154,4 +193,4 @@ export function Header({ onSearch, searchResults, isSearching, searchQuery }: He
       </div>
     </header>
   );
-} 
+}
