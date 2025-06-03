@@ -115,8 +115,7 @@ Generate a natural Polish response summarizing these results.`;
       context.shelves?.map((s) => `${s.name} (pozycja ${s.position}, ID: ${s.shelf_id})`).join(", ") || "";
 
     return `You are a voice command parser for a Polish freezer/fridge management app called MyFreezer.
-
-Your task is to parse Polish voice commands and return structured JSON responses for freezer/fridge operations.
+Your task is to parse voice commands and return structured JSON responses for freezer/fridge operations.
 
 AVAILABLE CONTAINERS: ${containersInfo}
 AVAILABLE SHELVES: ${shelvesInfo}
