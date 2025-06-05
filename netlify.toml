@@ -6,8 +6,6 @@
   targetPort = 3000
 
 [functions]
-  # Increase timeout for voice processing functions (in seconds)
-  timeout = "30s"
   # Allow larger file uploads for audio files
   max_content_length = "25MB"
 
