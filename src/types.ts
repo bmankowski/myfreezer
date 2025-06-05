@@ -5,6 +5,8 @@
 /** Storage type options */
 export type StorageType = "freezer" | "fridge";
 
+export type CommandType = "add_item" | "remove_item" | "update_item" | "info";
+
 /** Base Container entity from the database */
 export interface Container {
   container_id: string;
@@ -195,7 +197,7 @@ export interface CommandActionDetailsDTO {
 
 /** Individual command action result */
 export interface CommandActionDTO {
-  type: "add_item" | "remove_item" | "update_item" | "query_item";
+  type: CommandType;
   status: "success" | "failed";
   details: CommandActionDetailsDTO;
 }

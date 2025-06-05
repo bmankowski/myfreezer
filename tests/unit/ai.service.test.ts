@@ -215,7 +215,7 @@ describe("AIService", () => {
                 success: true,
                 actions: [
                   {
-                    type: "query_item",
+                    type: "info",
                     item_name: "mleko",
                     quantity: 0,
                     shelf_identifier: null,
@@ -238,7 +238,7 @@ describe("AIService", () => {
 
       // Assert
       expect(result.success).toBe(true);
-      expect(result.actions[0].type).toBe("query_item");
+      expect(result.actions[0].type).toBe("info");
       expect(result.actions[0].item_name).toBe("mleko");
     });
 

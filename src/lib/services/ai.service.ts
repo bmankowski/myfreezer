@@ -6,7 +6,7 @@ import type { CommandContext } from "@/types";
 // ZOD Schemas for validation
 const ParsedActionSchema = z.object({
   type: z
-    .enum(["add_item", "remove_item", "update_item", "query_item", "clarify_message"])
+    .enum(["add_item", "remove_item", "update_item", "info", "clarify_message"])
     .describe("Type of action to be performed"),
   item_name: z.string().describe("Name of the item to be added, removed, updated, or queried"),
   quantity: z.number().describe("Quantity of the item to be added, removed, or updated"),
@@ -15,7 +15,11 @@ const ParsedActionSchema = z.object({
 
 const AIParseResultSchema = z.object({
   actions: z.array(ParsedActionSchema).describe("Actions to be performed"),
-  message: z.string().describe("Message to be displayed to the user"),
+  message: z
+    .string()
+    .describe(
+      "Information for user, and if user ask about item, return nice message containing item name, quantity, container  shelves names"
+    ),
   needs_clarification: z.boolean().describe("Whether the command needs clarification"),
   clarification_question: z.string().describe("Question to be asked to the user"),
 });
@@ -50,7 +54,7 @@ export class AIService {
         ],
         response_format: zodResponseFormat(AIParseResultSchema, "voice_command_parse"),
         temperature: 0.1,
-        max_tokens: 1000,
+        max_tokens: 5000,
       });
 
       const content = response.choices[0]?.message?.content;
@@ -102,29 +106,54 @@ Generate a natural Polish response summarizing these results.`;
   }
 
   private buildSystemPrompt(context: CommandContext): string {
-    return `You are a text command parser for a Polish freezer/fridge management app called MyFreezer.
-Your task is to parse text commands and return structured JSON responses for freezer/fridge operations.
-\n
-ALL DATA: ${context.allData}
-\n
-RULES:
-1. if there are many items with the same name in different locations and it's unclear which one should be removed, 
-ask for clarification unless the command means that all items should be removed\n
-2. success is true if the command is valid and the operation is clear, false otherwise\n
-3. if the command is not clear, ask for clarification\n
-4. if container or shelf is not specified, use default shelf number ${context.default_shelf_id || "none"}\n
+    return `You are a text command parser for a Polish fridge/freezer management app called MyFreezer.
 
-NORMALIZATION RULES:
-- Convert item names to Polish singular form (mleka → mleko, chleby → chleb)\n
-- Parse quantities from Polish text (dwa → 2, pięć → 5)\n
-- Match shelf names/positions (pierwsza półka → position 1)\n
-- Match container names/types (lodówka → fridge, zamrażarka → freezer)\n
+Your task is to analyze Polish natural-language commands from users and return structured JSON responses representing clear operations on items stored in the fridge or freezer.
 
-RESPOND ONLY WITH VALID JSON.`;
+### 📦 CONTEXT
+- All data: ${context.allData}
+- Default shelf (if unspecified): ${context.default_shelf_id || "none"}
+
+### 📋 RULES
+1. If multiple items with the same name exist in different locations and the command doesn't clearly indicate which to remove:
+   - Ask for clarification unless the command suggests removing all.
+2. "success" must be:
+   - true if the command is valid and unambiguous.
+   - false otherwise.
+3. If the command is unclear or ambiguous, ask the user to clarify.
+4. If the user asks about an item:
+   - Treat this as an "info" action.
+   - ALWAYS tell about every location of the item, not only the first one
+   - Return a friendly message with:
+     - the item's name,
+     - total quantity,
+     - container type (e.g., fridge/freezer),
+     - shelf position(s).
+5. When adding or removing an item without a specified container/shelf, default to:
+   - Shelf ID: \${context.default_shelf_id || "none"}
+6. Do not reply with “Sprawdzono.”
+   - Always return an "info" action with a friendly, informative message.
+7. If the user asks about a type of food (e.g., "chicken"):
+   - Return info about all items made with that ingredient or type.
+8. Do not hallucinate.
+   - If something is not known or cannot be determined, state that clearly.
+9. If the user asks about an item not in the system, respond that the item is not present.
+
+### 🔄 NORMALIZATION RULES
+- Normalize item names to Polish singular form
+  (e.g., mleka → mleko, chleby → chleb).
+- Convert Polish quantity words to numerical values
+  (e.g., dwa → 2, pięć → 5).
+- Interpret Polish descriptions of shelf positions
+  (e.g., pierwsza półka → position 1).
+- Convert container names:
+  - lodówka → fridge
+  - zamrażarka → freezer
+`;
   }
 
   private buildUserPrompt(command: string): string {
-    return `Parse this Polish text command: "${command}"`;
+    return command;
   }
 
   private parseAIResponse(content: string): AIParseResult {

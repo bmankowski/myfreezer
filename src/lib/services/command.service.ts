@@ -380,10 +380,10 @@ export class CommandService {
           };
         }
 
-        case "query_item":
+        case "info":
           // For queries, we'll just return success - actual search is handled separately
           return {
-            type: "query_item",
+            type: "info",
             status: "success",
             details,
           };
@@ -424,8 +424,8 @@ export class CommandService {
         return `Usunięto ${details.quantity} ${details.item_name} z ${details.shelf_name} w ${details.container_name}`;
       case "update_item":
         return `Zaktualizowano ilość ${details.item_name} na ${details.quantity} na ${details.shelf_name} w ${details.container_name}`;
-      case "query_item":
-        return `Sprawdzono ${details.item_name} na ${details.shelf_name} w ${details.container_name}`;
+      case "info":
+        return `Sprawdzono ${details.item_name} na ${details.shelf_name}`;
       default:
         return "Operacja wykonana";
     }
