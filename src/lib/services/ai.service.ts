@@ -139,13 +139,13 @@ Your task is to analyze Polish natural-language commands from users and return s
 9. If the user asks about an item not in the system, respond that the item is not present.
 
 ### 🔄 NORMALIZATION RULES
-- Normalize item names to Polish singular form
-  (e.g., mleka → mleko, chleby → chleb).
+- Normalize item names to Polish popular form:
+  (e.g., mleka → mleko, chleby → chleb, ziemniaki → ziemniaki, worek ziemniaków → ziemniaki).
 - Convert Polish quantity words to numerical values
   (e.g., dwa → 2, pięć → 5).
 - Interpret Polish descriptions of shelf positions
   (e.g., pierwsza półka → position 1).
-- Convert container names:
+- Convert container name types:
   - lodówka → fridge
   - zamrażarka → freezer
 `;

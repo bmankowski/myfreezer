@@ -4,3 +4,13 @@
 
 [dev]
   targetPort = 3000
+
+[functions]
+  # Increase timeout for voice processing functions
+  timeout = 30
+  # Allow larger file uploads for audio files
+  max_content_length = 26214400  # 25MB
+
+[build.environment]
+  # Enable Node.js 18 for better compatibility
+  NODE_VERSION = "18"

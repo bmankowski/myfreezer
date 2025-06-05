@@ -185,6 +185,14 @@ export interface ItemSearchResponseDTO {
 export interface CommandProcessDTO {
   default_shelf_id?: string;
   command: string;
+  retry_count?: number;
+  conversation_history?: {
+    role: "user" | "assistant";
+    content: string;
+  }[];
+  context?: {
+    default_container_id?: string;
+  };
 }
 
 /** Details of a command action result */

@@ -1,9 +1,6 @@
 import type { APIRoute } from "astro";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
 import OpenAI from "openai";
-import fs from "fs";
-import fsPromises from "fs/promises";
-import path from "path";
 
 const openai = new OpenAI({
   baseURL: "https://api.openai.com/v1/",
@@ -45,29 +42,21 @@ export const POST: APIRoute = async ({ locals, request }) => {
       name: audioFile.name,
     });
 
-    // Writing audioFile to disc
-    const tmpDir = "./tmp";
-
-    // Ensure tmp directory exists
-    await fsPromises.mkdir(tmpDir, { recursive: true });
-
-    // Create unique filename with timestamp and original extension
-    const timestamp = Date.now();
-    const fileExtension = audioFile.name.split(".").pop() || "webm";
-    const filename = `audio_${timestamp}.${fileExtension}`;
-    const filePath = path.join(tmpDir, filename);
-
-    // Convert File to Buffer and write to disk
-    const arrayBuffer = await audioFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    await fsPromises.writeFile(filePath, buffer);
-
-    console.log("💾 Audio file written to disk:", filePath);
-
     try {
-      // Transcribe using OpenAI Whisper
+      // Convert File to buffer for OpenAI API
+      const arrayBuffer = await audioFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Create a file-like object for OpenAI API
+      const audioBuffer = new File([buffer], audioFile.name || "recording.webm", {
+        type: audioFile.type,
+      });
+
+      console.log("💾 Audio buffer prepared for API");
+
+      // Transcribe using OpenAI gpt-4o-mini-transcribe
       const transcription = await openai.audio.transcriptions.create({
-        file: fs.createReadStream(filePath),
+        file: audioBuffer,
         model: "gpt-4o-mini-transcribe",
         language: "pl",
         response_format: "text",
@@ -83,11 +72,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
       return createSuccessResponse({
         transcript: transcribedText,
-        language: "en",
+        language: "pl",
         duration: audioFile.size / 16000, // rough estimate
       });
     } catch (error) {
-      console.error("❌ Whisper API error:", error);
+      console.error("❌ gpt-4o-mini-transcrib API error:", error);
 
       if (error instanceof Error) {
         if (error.message.includes("rate_limit")) {
@@ -95,6 +84,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
         }
         if (error.message.includes("insufficient_quota")) {
           return createErrorResponse(503, "Transcription service quota exceeded");
+        }
+        if (error.message.includes("invalid_request_error")) {
+          return createErrorResponse(400, "Invalid audio format or corrupted file");
         }
       }
 
