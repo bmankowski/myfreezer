@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { z } from "zod";
+import { zodResponseFormat } from "openai/helpers/zod";
 
 interface VoiceCommandContext {
   default_container_id?: string;
@@ -13,23 +15,33 @@ interface VoiceCommandContext {
     position: number;
     container_id: string;
   }[];
+  allData: string;
+  previousMessages?: {
+    role: "user" | "assistant";
+    content: string;
+  }[];
 }
 
-interface ParsedAction {
-  type: "add_item" | "remove_item" | "update_item" | "query_item";
-  item_name: string;
-  quantity: number;
-  shelf_identifier?: string; // name or position
-  container_identifier?: string; // name or type
-}
+// ZOD Schemas for validation
+const ParsedActionSchema = z.object({
+  type: z
+    .enum(["add_item", "remove_item", "update_item", "query_item", "clarify_message"])
+    .describe("Type of action to be performed"),
+  item_name: z.string().describe("Name of the item to be added, removed, updated, or queried"),
+  quantity: z.number().describe("Quantity of the item to be added, removed, or updated"),
+  shelf_id: z.number().describe("Id of the shelf to be used for the action"),
+});
 
-interface AIParseResult {
-  success: boolean;
-  actions: ParsedAction[];
-  message: string;
-  needs_clarification?: boolean;
-  clarification_question?: string;
-}
+const AIParseResultSchema = z.object({
+  actions: z.array(ParsedActionSchema).describe("Actions to be performed"),
+  message: z.string().describe("Message to be displayed to the user"),
+  needs_clarification: z.boolean().describe("Whether the command needs clarification"),
+  clarification_question: z.string().describe("Question to be asked to the user"),
+});
+
+// Infer TypeScript types from Zod schemas
+export type ParsedAction = z.infer<typeof ParsedActionSchema>;
+type AIParseResult = z.infer<typeof AIParseResultSchema>;
 
 export class AIService {
   private client: OpenAI;
@@ -55,6 +67,7 @@ export class AIService {
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        response_format: zodResponseFormat(AIParseResultSchema, "voice_command_parse"),
         temperature: 0.1,
         max_tokens: 1000,
       });
@@ -108,41 +121,17 @@ Generate a natural Polish response summarizing these results.`;
   }
 
   private buildSystemPrompt(context: VoiceCommandContext): string {
-    const containersInfo =
-      context.containers?.map((c) => `${c.name} (${c.type}, ID: ${c.container_id})`).join(", ") || "";
-
-    const shelvesInfo =
-      context.shelves?.map((s) => `${s.name} (pozycja ${s.position}, ID: ${s.shelf_id})`).join(", ") || "";
-
     return `You are a voice command parser for a Polish freezer/fridge management app called MyFreezer.
 Your task is to parse voice commands and return structured JSON responses for freezer/fridge operations.
 
-AVAILABLE CONTAINERS: ${containersInfo}
-AVAILABLE SHELVES: ${shelvesInfo}
+ALL DATA: ${context.allData}
 DEFAULT CONTAINER: ${context.default_container_id || "none"}
 
-SUPPORTED OPERATIONS:
-1. add_item - dodaj, wstaw, włóż items to shelf
-2. remove_item - wyjmij, usuń specific quantities 
-3. update_item - zmień quantity to specific amount
-4. query_item - sprawdź, gdzie jest, ile mam
-
-RESPONSE FORMAT (JSON only):
-{
-  "success": true/false,
-  "actions": [
-    {
-      "type": "add_item|remove_item|update_item|query_item",
-      "item_name": "normalized_polish_name",
-      "quantity": number,
-      "shelf_identifier": "shelf_name_or_position",
-      "container_identifier": "container_name_or_type"
-    }
-  ],
-  "message": "Polish summary of what will be done",
-  "needs_clarification": true/false,
-  "clarification_question": "Polish question if unclear"
-}
+RULES:
+1. if there are many items with the same name in different locations and it's unclear which one should be removed, ask for clarification
+2. success is true if the command is valid and the operation is clear, false otherwise
+3. if the command is not clear, ask for clarification
+4. if container or shelf is not specified, use default shelf
 
 NORMALIZATION RULES:
 - Convert item names to Polish singular form (mleka → mleko, chleby → chleb)
@@ -165,24 +154,17 @@ RESPOND ONLY WITH VALID JSON. NO EXPLANATIONS OUTSIDE JSON.`;
         throw new Error("No JSON found in AI response");
       }
 
-      const parsed = JSON.parse(jsonMatch[0]);
+      const jsonData = JSON.parse(jsonMatch[0]);
 
-      // Validate required fields
-      if (typeof parsed.success !== "boolean") {
-        throw new Error("Invalid AI response format");
-      }
+      // Validate using ZOD schema
+      const validatedData = AIParseResultSchema.parse(jsonData);
 
-      return {
-        success: parsed.success,
-        actions: parsed.actions || [],
-        message: parsed.message || "",
-        needs_clarification: parsed.needs_clarification || false,
-        clarification_question: parsed.clarification_question,
-      };
+      return validatedData;
     } catch (error) {
       console.error("Failed to parse AI response:", error);
+
+      // Return a fallback response that matches the schema
       return {
-        success: false,
         actions: [],
         message: "Nie mogę zrozumieć polecenia. Spróbuj ponownie.",
         needs_clarification: true,

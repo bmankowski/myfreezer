@@ -230,7 +230,6 @@ MainDashboardView
   - Timeout na nagrywanie
 - **Typy**: `VoiceProcessCommandDTO`, `VoiceProcessResponseDTO`
 - **Props**:
-  - `defaultContainerId?: string`
   - `onCommandSuccess?: (response: VoiceProcessResponseDTO) => void`
   - `onCommandError?: (error: string) => void`
 

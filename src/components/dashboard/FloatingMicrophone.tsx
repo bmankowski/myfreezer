@@ -11,12 +11,12 @@ interface VoiceState {
 }
 
 interface FloatingMicrophoneProps {
-  defaultContainerId?: string;
+  defaultShelfId?: string;
   onCommandSuccess?: (response: VoiceProcessResponseDTO) => void;
   onCommandError?: (error: string) => void;
 }
 
-export function FloatingMicrophone({ defaultContainerId, onCommandSuccess, onCommandError }: FloatingMicrophoneProps) {
+export function FloatingMicrophone({ onCommandSuccess, onCommandError }: FloatingMicrophoneProps) {
   const [state, setState] = useState<VoiceState>({
     isRecording: false,
     isProcessing: false,
@@ -65,7 +65,6 @@ export function FloatingMicrophone({ defaultContainerId, onCommandSuccess, onCom
 
         const commandDTO: VoiceProcessCommandDTO = {
           command: transcript,
-          context: defaultContainerId ? { default_container_id: defaultContainerId } : {},
         };
 
         const processResponse = await fetch("/api/voice/process", {
@@ -106,7 +105,7 @@ export function FloatingMicrophone({ defaultContainerId, onCommandSuccess, onCom
         }
       }
     },
-    [defaultContainerId, onCommandSuccess, onCommandError]
+    [onCommandSuccess, onCommandError]
   );
 
   // Request microphone permission and start recording

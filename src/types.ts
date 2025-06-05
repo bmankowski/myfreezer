@@ -178,10 +178,8 @@ export interface ItemSearchResponseDTO {
 
 /** Command for processing voice commands */
 export interface VoiceProcessCommandDTO {
+  default_shelf_id?: string;
   command: string;
-  context: {
-    default_container_id?: string;
-  };
 }
 
 /** Details of a voice action result */

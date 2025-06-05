@@ -86,11 +86,6 @@ export function Dashboard() {
   const handleItemDelete = async (itemId: string) => {
     try {
       await actions.deleteItem(itemId);
-      addToast({
-        type: "success",
-        title: "Item deleted",
-        description: "Item has been removed successfully",
-      });
     } catch (error) {
       addToast({
         type: "error",
@@ -173,7 +168,7 @@ export function Dashboard() {
       </main>
 
       <FloatingMicrophone
-        defaultContainerId={preferences?.default_shelf?.container_id || state.containers[0]?.container_id}
+        defaultShelf={preferences?.default_shelf?.container_id || state.containers[0]?.container_id}
         onCommandSuccess={(response) => {
           addToast({
             type: "success",

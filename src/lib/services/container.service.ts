@@ -103,6 +103,27 @@ export class ContainerService {
   }
 
   /**
+   * Get a shelf by name
+   * @param containerId - The ID of the container
+   * @param shelfName - The name of the shelf
+   * @returns The shelf with items
+   */
+  async getShelfByName(containerId: string, shelfName: string): Promise<ShelfWithItemsDTO | null> {
+    const { data, error } = await this.supabase
+      .from("shelves")
+      .select("shelf_id, name, position, created_at, items(item_id, name, quantity, created_at)")
+      .eq("container_id", containerId)
+      .eq("name", shelfName)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to fetch shelf: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
    * Get detailed container information with shelves and items
    */
   async getContainerDetails(containerId: string): Promise<ContainerDetailsDTO | null> {

@@ -9,23 +9,43 @@ import type {
   VoiceQueryResponseDTO,
   VoiceQueryItemDTO,
 } from "../../types.js";
-import { AIService } from "./ai.service.js";
+import { AIService, type ParsedAction } from "./ai.service.js";
 import { ContainerService } from "./container.service.js";
 import { ShelfService } from "./shelf.service.js";
 import { ItemService } from "./item.service.js";
 
 interface ActionContext {
-  containers: {
-    container_id: string;
-    name: string;
-    type: "freezer" | "fridge";
-  }[];
-  shelves: {
-    shelf_id: string;
-    name: string;
-    position: number;
-    container_id: string;
-  }[];
+  default_shelf_id?: string;
+  allData: string;
+  idMappings: {
+    containers: Map<number, string>; // number -> original container_id
+    shelves: Map<number, string>; // number -> original shelf_id
+    items: Map<number, string>; // number -> original item_id
+  };
+  reverseIdMappings: {
+    containers: Map<string, number>; // original container_id -> number
+    shelves: Map<string, number>; // original shelf_id -> number
+    items: Map<string, number>; // original item_id -> number
+  };
+}
+
+interface ContainerData {
+  container_id: string;
+  name: string;
+  shelves: ShelfData[];
+}
+
+interface ShelfData {
+  shelf_id: string;
+  name: string;
+  position: number;
+  items: ItemData[];
+}
+
+interface ItemData {
+  item_id: string;
+  name: string;
+  quantity: number;
 }
 
 export class VoiceService {
@@ -105,18 +125,25 @@ export class VoiceService {
   async processCommand(command: VoiceProcessCommandDTO, userId: string): Promise<VoiceProcessResponseDTO> {
     try {
       // Get user context (containers and shelves)
-      const context = await this.getUserContext(userId, command.context?.default_container_id);
+      const context = await this.getUserContext(userId);
 
       // Parse command with AI
       const aiResult = await this.aiService.parseVoiceCommand(command.command, {
-        default_container_id: command.context?.default_container_id,
-        containers: context.containers,
-        shelves: context.shelves,
+        allData: context.allData,
       });
 
-      if (!aiResult.success || aiResult.needs_clarification) {
+      if (!aiResult.actions.length) {
         return {
           success: false,
+          actions: [],
+          message: aiResult.clarification_question || aiResult.message,
+          ai_response: "Nie zrozumiałem polecenia",
+        };
+      }
+
+      if (aiResult.needs_clarification) {
+        return {
+          success: true,
           actions: [],
           message: aiResult.clarification_question || aiResult.message,
           ai_response: aiResult.message,
@@ -140,8 +167,9 @@ export class VoiceService {
           }
         } catch {
           overallSuccess = false;
+          // Only add non-clarify actions to failed actions
           actions.push({
-            type: parsedAction.type,
+            type: parsedAction.type as VoiceActionDTO["type"],
             status: "failed",
             details: {
               item_name: parsedAction.item_name,
@@ -253,85 +281,47 @@ export class VoiceService {
     return `Znaleziono ${items.length} różnych przedmiotów`;
   }
 
-  private async getUserContext(userId: string, defaultContainerId?: string): Promise<ActionContext> {
+  private async getUserContext(userId: string, defaultShelfId?: string): Promise<ActionContext> {
     // Get user's containers
     const containers = await this.containerService.getUserContainers(userId);
-    const containerData = containers.map((c) => ({
-      container_id: c.container_id,
-      name: c.name,
-      type: c.type,
-    }));
 
-    // Get shelves for default container or all containers
-    let shelves: {
-      shelf_id: string;
-      name: string;
-      position: number;
-      container_id: string;
-    }[] = [];
+    // Create comprehensive ID mappings for AI processing
+    const { idMappings, reverseIdMappings } = this.createIdMappings(containers);
 
-    if (defaultContainerId) {
-      // Get shelves for specific container
-      const containerDetails = await this.containerService.getContainerDetails(defaultContainerId);
-      if (containerDetails) {
-        shelves = containerDetails.shelves.map((s) => ({
-          shelf_id: s.shelf_id,
-          name: s.name,
-          position: s.position,
-          container_id: defaultContainerId,
-        }));
-      }
-    } else {
-      // Get shelves for all containers (this would require a new method)
-      // For now, limit to first container if exists
-      if (containerData.length > 0) {
-        const firstContainer = containerData[0];
-        const containerDetails = await this.containerService.getContainerDetails(firstContainer.container_id);
-        if (containerDetails) {
-          shelves = containerDetails.shelves.map((s) => ({
-            shelf_id: s.shelf_id,
-            name: s.name,
-            position: s.position,
-            container_id: firstContainer.container_id,
-          }));
-        }
-      }
-    }
+    // Transform data for AI with sequential shelf IDs
+    const transformedData = this.transformDataForAI(containers, reverseIdMappings);
 
     return {
-      containers: containerData,
-      shelves,
+      default_shelf_id: defaultShelfId,
+      allData: JSON.stringify(transformedData),
+      idMappings,
+      reverseIdMappings,
     };
   }
 
-  private async executeAction(
-    parsedAction: {
-      type: string;
-      item_name: string;
-      quantity: number;
-      shelf_identifier?: string;
-      container_identifier?: string;
-    },
-    context: ActionContext
-  ): Promise<VoiceActionDTO> {
-    const { item_name, quantity, shelf_identifier, container_identifier } = parsedAction;
+  private async executeAction(parsedAction: ParsedAction, context: ActionContext): Promise<VoiceActionDTO> {
+    const { item_name, quantity, shelf_id } = parsedAction;
 
-    // Resolve shelf
-    const shelf = this.resolveShelf(shelf_identifier, container_identifier, context);
-    if (!shelf) {
-      throw new Error("Cannot resolve shelf");
+    if (!shelf_id) {
+      throw new Error("Shelf ID is required");
     }
 
-    const container = context.containers.find((c) => c.container_id === shelf.container_id);
-    if (!container) {
-      throw new Error("Cannot resolve container");
+    // Resolve shelf using ID mappings
+    const originalShelfId = this.resolveOriginalId(shelf_id, "shelves", context.idMappings);
+    if (!originalShelfId) {
+      throw new Error("Cannot resolve shelf identifier");
+    }
+
+    const shelf = await this.shelfService.getShelfById(originalShelfId);
+    if (!shelf) {
+      throw new Error("Shelf not found");
     }
 
     const details: VoiceActionDetailsDTO = {
       item_name,
       quantity,
       shelf_name: shelf.name,
-      container_name: container.name,
+      container_name: "Container", // We'd need to fetch container name if needed
     };
 
     try {
@@ -390,31 +380,11 @@ export class VoiceService {
       }
     } catch {
       return {
-        type: parsedAction.type,
+        type: parsedAction.type as VoiceActionDTO["type"],
         status: "failed",
         details,
       };
     }
-  }
-
-  private resolveShelf(
-    shelfIdentifier: string | undefined,
-    containerIdentifier: string | undefined,
-    context: ActionContext
-  ) {
-    // If no shelf specified, use first shelf of default/first container
-    if (!shelfIdentifier) {
-      return context.shelves[0] || null;
-    }
-
-    // Try to match by position (numeric)
-    const position = parseInt(shelfIdentifier, 10);
-    if (!isNaN(position)) {
-      return context.shelves.find((s) => s.position === position) || null;
-    }
-
-    // Try to match by name (case insensitive)
-    return context.shelves.find((s) => s.name.toLowerCase().includes(shelfIdentifier.toLowerCase())) || null;
   }
 
   private async findItemId(itemName: string, shelfId: string): Promise<string> {
@@ -446,5 +416,85 @@ export class VoiceService {
       default:
         return "Operacja wykonana";
     }
+  }
+
+  /**
+   * Create comprehensive ID mappings for AI processing
+   */
+  private createIdMappings(containers: ContainerData[]): {
+    idMappings: ActionContext["idMappings"];
+    reverseIdMappings: ActionContext["reverseIdMappings"];
+  } {
+    const idMappings = {
+      containers: new Map<number, string>(),
+      shelves: new Map<number, string>(),
+      items: new Map<number, string>(),
+    };
+
+    const reverseIdMappings = {
+      containers: new Map<string, number>(),
+      shelves: new Map<string, number>(),
+      items: new Map<string, number>(),
+    };
+
+    let containerCounter = 1;
+    let shelfCounter = 1;
+    let itemCounter = 1;
+
+    for (const container of containers) {
+      // Map container
+      idMappings.containers.set(containerCounter, container.container_id);
+      reverseIdMappings.containers.set(container.container_id, containerCounter);
+      containerCounter++;
+
+      // Map shelves
+      for (const shelf of container.shelves) {
+        idMappings.shelves.set(shelfCounter, shelf.shelf_id);
+        reverseIdMappings.shelves.set(shelf.shelf_id, shelfCounter);
+        shelfCounter++;
+
+        // Map items
+        for (const item of shelf.items) {
+          idMappings.items.set(itemCounter, item.item_id);
+          reverseIdMappings.items.set(item.item_id, itemCounter);
+          itemCounter++;
+        }
+      }
+    }
+
+    return { idMappings, reverseIdMappings };
+  }
+
+  /**
+   * Transform data structure with sequential IDs for AI processing
+   */
+  private transformDataForAI(containers: ContainerData[], reverseIdMappings: ActionContext["reverseIdMappings"]) {
+    return containers.map((container) => ({
+      container_id: reverseIdMappings.containers.get(container.container_id),
+      name: container.name,
+      shelves: container.shelves.map((shelf) => ({
+        shelf_id: reverseIdMappings.shelves.get(shelf.shelf_id),
+        name: shelf.name,
+        items: shelf.items.map((item) => ({
+          item_id: reverseIdMappings.items.get(item.item_id),
+          name: item.name,
+          quantity: item.quantity,
+        })),
+      })),
+    }));
+  }
+
+  /**
+   * Resolve sequential ID back to original string ID
+   */
+  private resolveOriginalId(
+    sequentialId: string | number,
+    type: "containers" | "shelves" | "items",
+    idMappings: ActionContext["idMappings"]
+  ): string | null {
+    const numId = typeof sequentialId === "string" ? parseInt(sequentialId, 10) : sequentialId;
+    if (isNaN(numId)) return null;
+
+    return idMappings[type].get(numId) || null;
   }
 }

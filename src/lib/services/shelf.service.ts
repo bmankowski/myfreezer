@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
 import type {
   ShelfDTO,
+  ShelfWithItemsDTO,
   CreateShelfCommandDTO,
   CreateShelfEntity,
   UpdateShelfCommandDTO,
@@ -12,6 +13,25 @@ import type {
 export class ShelfService {
   constructor(private supabase: SupabaseClient<Database>) {}
 
+  /**
+   * Get a shelf by ID
+   * @param containerId - The ID of the container
+   * @param shelfId - The ID of the shelf
+   * @returns The shelf with items
+   */
+  async getShelfById(shelfId: string): Promise<ShelfWithItemsDTO | null> {
+    const { data, error } = await this.supabase
+      .from("shelves")
+      .select("shelf_id, name, position, created_at, items(item_id, name, quantity, created_at)")
+      .eq("shelf_id", shelfId)
+      .single();
+
+    if (error) {
+      return null;
+    }
+
+    return data;
+  }
   /**
    * Create a new shelf in a container
    */

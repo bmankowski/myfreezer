@@ -148,7 +148,6 @@ export function ContainerGrid({
       {/* Containers Section */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">
-          My Containers
           {searchQuery && searchQuery.length >= 2 && (
             <span className="ml-2 text-base font-normal text-gray-500">
               ({filteredContainers.length} containing &ldquo;{searchQuery}&rdquo;)
