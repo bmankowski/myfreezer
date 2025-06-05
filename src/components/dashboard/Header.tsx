@@ -82,6 +82,69 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
     });
   };
 
+  const refreshTokenIfNeeded = async (): Promise<boolean> => {
+    const token = localStorage.getItem("access_token");
+    const refreshToken = localStorage.getItem("refresh_token");
+
+    if (!token || !refreshToken) {
+      return false;
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const now = Math.floor(Date.now() / 1000);
+      const expiry = payload.exp;
+
+      if (expiry - now < 300) {
+        console.log("🔄 Refreshing expired token in Header...");
+
+        const response = await fetch("/api/auth/refresh", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem("access_token", data.access_token);
+          localStorage.setItem("refresh_token", data.refresh_token);
+          console.log("✅ Token refreshed successfully in Header");
+          return true;
+        } else {
+          console.log("❌ Token refresh failed in Header");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          localStorage.removeItem("user");
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error checking/refreshing token in Header:", error);
+      return false;
+    }
+  };
+
+  const getAuthHeadersWithRefresh = async (): Promise<HeadersInit | null> => {
+    const tokenIsValid = await refreshTokenIfNeeded();
+    if (!tokenIsValid) {
+      return null;
+    }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      return null;
+    }
+
+    return {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+  };
+
   const handleCommandSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commandInput.trim() || isProcessingCommand) return;
@@ -89,12 +152,19 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
     setIsProcessingCommand(true);
 
     try {
+      const headers = await getAuthHeadersWithRefresh();
+      if (!headers) {
+        onToast({
+          type: "error",
+          title: "Authentication Error",
+          description: "Please log in again to continue.",
+        });
+        return;
+      }
+
       const response = await fetch("/api/command/process", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+        headers,
         body: JSON.stringify({
           command: commandInput.trim(),
         } as CommandProcessDTO),
@@ -111,11 +181,19 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
         setCommandInput(""); // Clear input on success
         onDataRefresh(); // Refresh container data
       } else {
-        onToast({
-          type: "error",
-          title: "Command Failed",
-          description: result.error || "Failed to process command",
-        });
+        if (response.status === 401) {
+          onToast({
+            type: "error",
+            title: "Authentication Error",
+            description: "Please log in again to continue.",
+          });
+        } else {
+          onToast({
+            type: "error",
+            title: "Command Failed",
+            description: result.error || "Failed to process command",
+          });
+        }
       }
     } catch (error) {
       console.error("Command processing error:", error);
