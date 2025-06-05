@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,14 @@ export function AddShelfModal({ isOpen, onClose, existingPositions, onAdd }: Add
     position: Math.max(0, ...existingPositions) + 1,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update position when existingPositions changes (after adding a shelf)
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      position: Math.max(0, ...existingPositions) + 1,
+    }));
+  }, [existingPositions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
