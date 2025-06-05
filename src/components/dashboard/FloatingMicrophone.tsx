@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Mic, MicOff, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { VoiceProcessCommandDTO, VoiceProcessResponseDTO } from "@/types";
+import type { CommandProcessDTO, CommandProcessResponseDTO } from "@/types";
 
 interface VoiceState {
   isRecording: boolean;
@@ -12,7 +12,7 @@ interface VoiceState {
 
 interface FloatingMicrophoneProps {
   defaultShelfId?: string;
-  onCommandSuccess?: (response: VoiceProcessResponseDTO) => void;
+  onCommandSuccess?: (response: CommandProcessResponseDTO) => void;
   onCommandError?: (error: string) => void;
 }
 
@@ -63,7 +63,7 @@ export function FloatingMicrophone({ onCommandSuccess, onCommandError }: Floatin
         // Step 2: Process the transcribed command
         console.log("🤖 Processing voice command...");
 
-        const commandDTO: VoiceProcessCommandDTO = {
+        const commandDTO: CommandProcessDTO = {
           command: transcript,
         };
 
@@ -81,7 +81,7 @@ export function FloatingMicrophone({ onCommandSuccess, onCommandError }: Floatin
           throw new Error(errorData.error || "Command processing failed");
         }
 
-        const responseData: VoiceProcessResponseDTO = await processResponse.json();
+        const responseData: CommandProcessResponseDTO = await processResponse.json();
         console.log("✅ Command processed:", responseData);
 
         setState((prev) => ({ ...prev, isProcessing: false, error: null }));

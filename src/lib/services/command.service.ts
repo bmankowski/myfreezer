@@ -1,13 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
 import type {
-  VoiceProcessCommandDTO,
-  VoiceProcessResponseDTO,
-  VoiceActionDTO,
-  VoiceActionDetailsDTO,
-  VoiceQueryCommandDTO,
-  VoiceQueryResponseDTO,
-  VoiceQueryItemDTO,
+  CommandProcessDTO,
+  CommandProcessResponseDTO,
+  CommandActionDTO,
+  CommandActionDetailsDTO,
+  CommandQueryDTO,
+  CommandQueryResponseDTO,
+  CommandQueryItemDTO,
 } from "../../types.js";
 import { AIService, type ParsedAction } from "./ai.service.js";
 import { ContainerService } from "./container.service.js";
@@ -48,7 +48,7 @@ interface ItemData {
   quantity: number;
 }
 
-export class VoiceService {
+export class CommandService {
   private aiService: AIService;
   private containerService: ContainerService;
   private shelfService: ShelfService;
@@ -62,9 +62,9 @@ export class VoiceService {
   }
 
   /**
-   * Process voice query and return search results with AI-generated response
+   * Process text/voice query and return search results with AI-generated response
    */
-  async processQuery(command: VoiceQueryCommandDTO): Promise<VoiceQueryResponseDTO> {
+  async processQuery(command: CommandQueryDTO): Promise<CommandQueryResponseDTO> {
     try {
       // Search for items based on the query
       const searchResults = await this.itemService.searchItems({
@@ -120,15 +120,15 @@ export class VoiceService {
   }
 
   /**
-   * Process voice command with AI parsing and action execution
+   * Process text/voice command with AI parsing and action execution
    */
-  async processCommand(command: VoiceProcessCommandDTO, userId: string): Promise<VoiceProcessResponseDTO> {
+  async processCommand(command: CommandProcessDTO, userId: string): Promise<CommandProcessResponseDTO> {
     try {
       // Get user context (containers and shelves)
       const context = await this.getUserContext(userId);
 
       // Parse command with AI
-      const aiResult = await this.aiService.parseVoiceCommand(command.command, {
+      const aiResult = await this.aiService.parseCommand(command.command, {
         allData: context.allData,
       });
 
@@ -151,7 +151,7 @@ export class VoiceService {
       }
 
       // Execute actions
-      const actions: VoiceActionDTO[] = [];
+      const actions: CommandActionDTO[] = [];
       let overallSuccess = true;
       const messages: string[] = [];
 
@@ -169,7 +169,7 @@ export class VoiceService {
           overallSuccess = false;
           // Only add non-clarify actions to failed actions
           actions.push({
-            type: parsedAction.type as VoiceActionDTO["type"],
+            type: parsedAction.type as CommandActionDTO["type"],
             status: "failed",
             details: {
               item_name: parsedAction.item_name,
@@ -223,8 +223,8 @@ export class VoiceService {
       shelf: { name: string; position: number };
       container: { name: string };
     }[]
-  ): VoiceQueryItemDTO[] {
-    const itemMap = new Map<string, VoiceQueryItemDTO>();
+  ): CommandQueryItemDTO[] {
+    const itemMap = new Map<string, CommandQueryItemDTO>();
 
     for (const item of items) {
       const key = item.name.toLowerCase();
@@ -263,7 +263,7 @@ export class VoiceService {
     return Array.from(itemMap.values());
   }
 
-  private generateQueryMessage(items: VoiceQueryItemDTO[]): string {
+  private generateQueryMessage(items: CommandQueryItemDTO[]): string {
     if (items.length === 0) {
       return "Nie znaleziono żadnych przedmiotów";
     }
@@ -299,7 +299,7 @@ export class VoiceService {
     };
   }
 
-  private async executeAction(parsedAction: ParsedAction, context: ActionContext): Promise<VoiceActionDTO> {
+  private async executeAction(parsedAction: ParsedAction, context: ActionContext): Promise<CommandActionDTO> {
     const { item_name, quantity, shelf_id } = parsedAction;
 
     if (!shelf_id) {
@@ -317,7 +317,7 @@ export class VoiceService {
       throw new Error("Shelf not found");
     }
 
-    const details: VoiceActionDetailsDTO = {
+    const details: CommandActionDetailsDTO = {
       item_name,
       quantity,
       shelf_name: shelf.name,
@@ -380,7 +380,7 @@ export class VoiceService {
       }
     } catch {
       return {
-        type: parsedAction.type as VoiceActionDTO["type"],
+        type: parsedAction.type as CommandActionDTO["type"],
         status: "failed",
         details,
       };
@@ -401,7 +401,7 @@ export class VoiceService {
     return searchResult.items[0].item_id;
   }
 
-  private generateActionMessage(action: VoiceActionDTO): string {
+  private generateActionMessage(action: CommandActionDTO): string {
     const { type, details } = action;
 
     switch (type) {

@@ -123,6 +123,7 @@ export function Dashboard() {
           searchQuery={state.searchQuery}
           onContainerCreate={actions.createContainer}
           onToast={addToast}
+          onDataRefresh={actions.loadContainers}
         />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -144,6 +145,7 @@ export function Dashboard() {
         searchQuery={state.searchQuery}
         onContainerCreate={actions.createContainer}
         onToast={addToast}
+        onDataRefresh={actions.loadContainers}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -168,7 +170,7 @@ export function Dashboard() {
       </main>
 
       <FloatingMicrophone
-        defaultShelf={preferences?.default_shelf?.container_id || state.containers[0]?.container_id}
+        defaultShelfId={preferences?.default_shelf?.container_id || state.containers[0]?.container_id}
         onCommandSuccess={(response) => {
           addToast({
             type: "success",

@@ -54,9 +54,9 @@ export class AIService {
   }
 
   /**
-   * Parse voice command using AI and return structured actions
+   * Parse text/voice command using AI and return structured actions
    */
-  async parseVoiceCommand(command: string, context: VoiceCommandContext): Promise<AIParseResult> {
+  async parseCommand(command: string, context: VoiceCommandContext): Promise<AIParseResult> {
     const systemPrompt = this.buildSystemPrompt(context);
     const userPrompt = this.buildUserPrompt(command);
 
@@ -121,14 +121,15 @@ Generate a natural Polish response summarizing these results.`;
   }
 
   private buildSystemPrompt(context: VoiceCommandContext): string {
-    return `You are a voice command parser for a Polish freezer/fridge management app called MyFreezer.
-Your task is to parse voice commands and return structured JSON responses for freezer/fridge operations.
+    return `You are a text command parser for a Polish freezer/fridge management app called MyFreezer.
+Your task is to parse text commands and return structured JSON responses for freezer/fridge operations.
 
 ALL DATA: ${context.allData}
 DEFAULT CONTAINER: ${context.default_container_id || "none"}
 
 RULES:
-1. if there are many items with the same name in different locations and it's unclear which one should be removed, ask for clarification
+1. if there are many items with the same name in different locations and it's unclear which one should be removed, 
+ask for clarification unless the command means that all items should be removed
 2. success is true if the command is valid and the operation is clear, false otherwise
 3. if the command is not clear, ask for clarification
 4. if container or shelf is not specified, use default shelf
@@ -143,7 +144,7 @@ RESPOND ONLY WITH VALID JSON. NO EXPLANATIONS OUTSIDE JSON.`;
   }
 
   private buildUserPrompt(command: string): string {
-    return `Parse this Polish voice command: "${command}"`;
+    return `Parse this Polish text command: "${command}"`;
   }
 
   private parseAIResponse(content: string): AIParseResult {

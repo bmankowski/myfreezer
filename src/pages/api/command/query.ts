@@ -4,7 +4,7 @@ import { CommandService } from "../../../lib/services/command.service.js";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
 import { isValidString, isValidUUID } from "../../../lib/validation.utils.js";
 
-// POST /api/voice/query - Process voice query with AI search
+// POST /api/command/query - Process text query with AI search
 export const POST: APIRoute = async ({ locals, request }) => {
   try {
     // Validate authentication
@@ -49,7 +49,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
       return createErrorResponse(400, "Query too long (max 200 characters)");
     }
 
-    // Process voice query using service
+    // Process text query using service
     const commandService = new CommandService(locals.supabase);
     const result = await commandService.processQuery({
       query: sanitizedQuery,
@@ -58,7 +58,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error("Voice query processing error:", error);
+    console.error("Text query processing error:", error);
 
     // Handle specific error types
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -73,4 +73,4 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     return createErrorResponse(500, "Internal server error");
   }
-};
+}; 

@@ -4,7 +4,7 @@ import { CommandService } from "../../../lib/services/command.service.js";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
 import { isValidString } from "../../../lib/validation.utils.js";
 
-// POST /api/voice/process - Process voice command with AI
+// POST /api/command/process - Process text command with AI
 export const POST: APIRoute = async ({ locals, request }) => {
   try {
     // Validate authentication
@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
       return createErrorResponse(400, "Command too long (max 500 characters)");
     }
 
-    // Process voice command using service
+    // Process text command using service
     const commandService = new CommandService(locals.supabase);
     const result = await commandService.processCommand(
       {
@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error("Voice command processing error:", error);
+    console.error("Text command processing error:", error);
 
     // Handle specific error types
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -77,4 +77,4 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     return createErrorResponse(500, "Internal server error");
   }
-};
+}; 

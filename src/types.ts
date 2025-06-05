@@ -173,64 +173,64 @@ export interface ItemSearchResponseDTO {
 }
 
 // ============================================================================
-// Voice Command DTOs
+// Command DTOs (Text/Voice)
 // ============================================================================
 
-/** Command for processing voice commands */
-export interface VoiceProcessCommandDTO {
+/** Command for processing text/voice commands */
+export interface CommandProcessDTO {
   default_shelf_id?: string;
   command: string;
 }
 
-/** Details of a voice action result */
-export interface VoiceActionDetailsDTO {
+/** Details of a command action result */
+export interface CommandActionDetailsDTO {
   item_name: string;
   quantity: number;
   shelf_name: string;
   container_name: string;
 }
 
-/** Individual voice action result */
-export interface VoiceActionDTO {
+/** Individual command action result */
+export interface CommandActionDTO {
   type: "add_item" | "remove_item" | "update_item" | "query_item";
   status: "success" | "failed";
-  details: VoiceActionDetailsDTO;
+  details: CommandActionDetailsDTO;
 }
 
-/** Response for voice command processing */
-export interface VoiceProcessResponseDTO {
+/** Response for command processing */
+export interface CommandProcessResponseDTO {
   success: boolean;
-  actions: VoiceActionDTO[];
+  actions: CommandActionDTO[];
   message: string;
   ai_response: string;
 }
 
-/** Command for voice queries */
-export interface VoiceQueryCommandDTO {
+/** Command for text/voice queries */
+export interface CommandQueryDTO {
   query: string;
   context: {
     containers?: string[];
   };
 }
 
-/** Location information for voice query responses */
+/** Location information for command query responses */
 export interface ItemLocationDTO {
   container_name: string;
   shelf_name: string;
   shelf_position: number;
 }
 
-/** Item result for voice queries */
-export interface VoiceQueryItemDTO {
+/** Item result for command queries */
+export interface CommandQueryItemDTO {
   name: string;
   quantity: number;
   locations: ItemLocationDTO[];
 }
 
-/** Response for voice queries */
-export interface VoiceQueryResponseDTO {
+/** Response for command queries */
+export interface CommandQueryResponseDTO {
   found: boolean;
-  items: VoiceQueryItemDTO[];
+  items: CommandQueryItemDTO[];
   message: string;
   ai_response: string;
 }
@@ -258,8 +258,8 @@ export type ContainerType = Container["type"];
 /** All possible action types for item operations */
 export type ItemActionType = "created" | "updated" | "deleted";
 
-/** All possible voice action types */
-export type VoiceActionType = VoiceActionDTO["type"];
+/** All possible command action types */
+export type CommandActionType = CommandActionDTO["type"];
 
 /** All possible action statuses */
 export type ActionStatus = "success" | "failed";

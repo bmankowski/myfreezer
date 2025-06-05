@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, X, User, LogOut, Plus } from "lucide-react";
+import { Search, X, User, LogOut, Plus, MessageSquare, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import type { CreateContainerCommandDTO } from "@/types";
+import type { CreateContainerCommandDTO, CommandProcessDTO } from "@/types";
 import type { Toast } from "@/lib/hooks/useToasts";
 
 interface HeaderProps {
@@ -23,14 +23,17 @@ interface HeaderProps {
   searchQuery: string;
   onContainerCreate: (data: CreateContainerCommandDTO) => void;
   onToast: (toast: Omit<Toast, "id">) => void;
+  onDataRefresh: () => void;
 }
 
-export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, onToast }: HeaderProps) {
+export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, onToast, onDataRefresh }: HeaderProps) {
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const [user, setUser] = useState<{ firstName?: string; lastName?: string; email?: string } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState<"freezer" | "fridge">("freezer");
+  const [commandInput, setCommandInput] = useState("");
+  const [isProcessingCommand, setIsProcessingCommand] = useState(false);
   const debouncedQuery = useDebounce(localQuery, 300);
 
   console.log("🏠 Header rendering:", { user, hasToken: !!localStorage.getItem("access_token") });
@@ -79,6 +82,53 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
     });
   };
 
+  const handleCommandSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commandInput.trim() || isProcessingCommand) return;
+
+    setIsProcessingCommand(true);
+
+    try {
+      const response = await fetch("/api/command/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({
+          command: commandInput.trim(),
+        } as CommandProcessDTO),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        onToast({
+          type: "success",
+          title: "Command Processed",
+          description: result.message || result.ai_response || "Command executed successfully",
+        });
+        setCommandInput(""); // Clear input on success
+        onDataRefresh(); // Refresh container data
+      } else {
+        onToast({
+          type: "error",
+          title: "Command Failed",
+          description: result.error || "Failed to process command",
+        });
+      }
+    } catch (error) {
+      console.error("Command processing error:", error);
+      onToast({
+        type: "error",
+        title: "Command Error",
+        description: "Failed to process command. Please try again.",
+      });
+    } finally {
+      setIsProcessingCommand(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -88,9 +138,10 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
             <h1 className="text-xl font-bold text-gray-900">MyFreezer</h1>
           </div>
 
-          {/* Search */}
-          <div className="flex-1 max-w-lg mx-8">
-            <div className="relative">
+          {/* Search and Command Inputs */}
+          <div className="flex-1 max-w-4xl mx-8 flex space-x-4">
+            {/* Search */}
+            <div className="flex-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
@@ -114,6 +165,32 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
                 </div>
               )}
             </div>
+
+            {/* Command Input */}
+            <form onSubmit={handleCommandSubmit} className="flex-1 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MessageSquare className="h-5 w-5 text-gray-400" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Add command... (e.g., 'dodaj 2 mleka na pierwszą półkę')"
+                value={commandInput}
+                onChange={(e) => setCommandInput(e.target.value)}
+                disabled={isProcessingCommand}
+                className="pl-10 pr-12"
+              />
+              <button
+                type="submit"
+                disabled={!commandInput.trim() || isProcessingCommand}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                {isProcessingCommand ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                ) : (
+                  <Send className="h-4 w-4 text-gray-400 hover:text-blue-600 disabled:text-gray-300" />
+                )}
+              </button>
+            </form>
           </div>
 
           {/* Actions and User Menu */}
