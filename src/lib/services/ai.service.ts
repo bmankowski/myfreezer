@@ -131,8 +131,7 @@ Your task is to analyze Polish natural-language commands from users and return s
      - shelf position(s).
 5. When adding or removing an item without a specified container/shelf, default to:
    - Shelf ID: \${context.default_shelf_id || "none"}
-6. Do not reply with “Sprawdzono.”
-   - Always return an "info" action with a friendly, informative message.
+6. NEVER reply with **Sprawdzono** It is completely not interesting. Always return an "info" action with a friendly, informative message.
 7. If the user asks about a type of food (e.g., "chicken"):
    - Return info about all items made with that ingredient or type.
 8. Do not hallucinate.
