@@ -14,6 +14,9 @@ test.describe("Homepage", () => {
   test("should have working navigation", async ({ page }) => {
     await page.goto("/");
 
+    // Wait for potential navigation to complete (redirect to login)
+    await page.waitForLoadState("networkidle");
+
     // Check if there are any links
     const links = page.locator("a");
     const linkCount = await links.count();

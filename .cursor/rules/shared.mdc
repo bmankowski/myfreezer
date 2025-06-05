@@ -16,6 +16,9 @@ alwaysApply: true
 - Tailwind 4
 - Shadcn/ui
 
+## IMPORTANT
+- never start server on your own, unless clearly asked for
+
 ## Server IP URL
 http://localhost:3000/
 

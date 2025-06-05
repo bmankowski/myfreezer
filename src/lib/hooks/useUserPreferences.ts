@@ -79,13 +79,29 @@ export function useUserPreferences(): UseUserPreferencesReturn {
   }, [refreshTokenIfNeeded]);
 
   const fetchPreferences = useCallback(async () => {
+    // Check if user has tokens before attempting to fetch
+    const token = localStorage.getItem("access_token");
+    const user = localStorage.getItem("user");
+
+    if (!token || !user) {
+      // User is not authenticated, set to not loading and return early
+      setIsLoading(false);
+      setError(null);
+      setPreferences(null);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
 
       const headers = await getAuthHeadersWithRefresh();
       if (!headers) {
-        throw new Error("Not authenticated");
+        // Token refresh failed, user is no longer authenticated
+        setIsLoading(false);
+        setError(null);
+        setPreferences(null);
+        return;
       }
 
       const response = await fetch("/api/user/preferences", {
