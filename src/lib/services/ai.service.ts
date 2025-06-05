@@ -1,26 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
-
-interface VoiceCommandContext {
-  default_container_id?: string;
-  containers?: {
-    container_id: string;
-    name: string;
-    type: "freezer" | "fridge";
-  }[];
-  shelves?: {
-    shelf_id: string;
-    name: string;
-    position: number;
-    container_id: string;
-  }[];
-  allData: string;
-  previousMessages?: {
-    role: "user" | "assistant";
-    content: string;
-  }[];
-}
+import type { CommandContext } from "@/types";
 
 // ZOD Schemas for validation
 const ParsedActionSchema = z.object({
@@ -56,7 +37,7 @@ export class AIService {
   /**
    * Parse text/voice command using AI and return structured actions
    */
-  async parseCommand(command: string, context: VoiceCommandContext): Promise<AIParseResult> {
+  async parseCommand(command: string, context: CommandContext): Promise<AIParseResult> {
     const systemPrompt = this.buildSystemPrompt(context);
     const userPrompt = this.buildUserPrompt(command);
 
@@ -110,7 +91,7 @@ Generate a natural Polish response summarizing these results.`;
           { role: "user", content: userPrompt },
         ],
         temperature: 0.3,
-        max_tokens: 200,
+        max_tokens: 1000,
       });
 
       return response.choices[0]?.message?.content || "Znaleziono wyniki wyszukiwania.";
@@ -120,27 +101,26 @@ Generate a natural Polish response summarizing these results.`;
     }
   }
 
-  private buildSystemPrompt(context: VoiceCommandContext): string {
+  private buildSystemPrompt(context: CommandContext): string {
     return `You are a text command parser for a Polish freezer/fridge management app called MyFreezer.
 Your task is to parse text commands and return structured JSON responses for freezer/fridge operations.
-
+\n
 ALL DATA: ${context.allData}
-DEFAULT CONTAINER: ${context.default_container_id || "none"}
-
+\n
 RULES:
 1. if there are many items with the same name in different locations and it's unclear which one should be removed, 
-ask for clarification unless the command means that all items should be removed
-2. success is true if the command is valid and the operation is clear, false otherwise
-3. if the command is not clear, ask for clarification
-4. if container or shelf is not specified, use default shelf
+ask for clarification unless the command means that all items should be removed\n
+2. success is true if the command is valid and the operation is clear, false otherwise\n
+3. if the command is not clear, ask for clarification\n
+4. if container or shelf is not specified, use default shelf number ${context.default_shelf_id || "none"}\n
 
 NORMALIZATION RULES:
-- Convert item names to Polish singular form (mleka → mleko, chleby → chleb)
-- Parse quantities from Polish text (dwa → 2, pięć → 5)
-- Match shelf names/positions (pierwsza półka → position 1)
-- Match container names/types (lodówka → fridge, zamrażarka → freezer)
+- Convert item names to Polish singular form (mleka → mleko, chleby → chleb)\n
+- Parse quantities from Polish text (dwa → 2, pięć → 5)\n
+- Match shelf names/positions (pierwsza półka → position 1)\n
+- Match container names/types (lodówka → fridge, zamrażarka → freezer)\n
 
-RESPOND ONLY WITH VALID JSON. NO EXPLANATIONS OUTSIDE JSON.`;
+RESPOND ONLY WITH VALID JSON.`;
   }
 
   private buildUserPrompt(command: string): string {

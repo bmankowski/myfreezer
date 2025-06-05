@@ -1,3 +1,5 @@
+import type { StorageType } from "@/types";
+
 // Generated database types for Supabase schema
 export interface Database {
   public: {
@@ -7,21 +9,21 @@ export interface Database {
           container_id: string;
           user_id: string;
           name: string;
-          type: "freezer" | "fridge";
+          type: StorageType;
           created_at: string;
         };
         Insert: {
           container_id?: string;
           user_id: string;
           name: string;
-          type?: "freezer" | "fridge";
+          type?: StorageType;
           created_at?: string;
         };
         Update: {
           container_id?: string;
           user_id?: string;
           name?: string;
-          type?: "freezer" | "fridge";
+          type?: StorageType;
           created_at?: string;
         };
       };

@@ -2,12 +2,15 @@
 // Database Entity Types
 // ============================================================================
 
+/** Storage type options */
+export type StorageType = "freezer" | "fridge";
+
 /** Base Container entity from the database */
 export interface Container {
   container_id: string;
   user_id: string;
   name: string;
-  type: "freezer" | "fridge";
+  type: StorageType;
   created_at: string;
 }
 
@@ -69,13 +72,13 @@ export type ContainerDTO = Omit<Container, "user_id">;
 /** Command for creating a new container */
 export interface CreateContainerCommandDTO {
   name: string;
-  type: "freezer" | "fridge";
+  type: StorageType;
 }
 
 /** Command for updating an existing container */
 export interface UpdateContainerCommandDTO {
   name: string;
-  type: "freezer" | "fridge";
+  type: StorageType;
 }
 
 /** Shelf with nested items for container details */
@@ -233,6 +236,15 @@ export interface CommandQueryResponseDTO {
   items: CommandQueryItemDTO[];
   message: string;
   ai_response: string;
+}
+
+export interface CommandContext {
+  default_shelf_id: number | null;
+  allData: string;
+  previousMessages?: {
+    role: "user" | "assistant";
+    content: string;
+  }[];
 }
 
 // ============================================================================

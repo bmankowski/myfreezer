@@ -13,9 +13,12 @@ import { AIService, type ParsedAction } from "./ai.service.js";
 import { ContainerService } from "./container.service.js";
 import { ShelfService } from "./shelf.service.js";
 import { ItemService } from "./item.service.js";
+import { UserPreferencesService } from "./user-preferences.service.js";
+import type { CommandContext } from "@/types";
 
+// All context for AI processing
 interface ActionContext {
-  default_shelf_id?: string;
+  transformed_default_shelf_id: number | null;
   allData: string;
   idMappings: {
     containers: Map<number, string>; // number -> original container_id
@@ -53,12 +56,14 @@ export class CommandService {
   private containerService: ContainerService;
   private shelfService: ShelfService;
   private itemService: ItemService;
+  private userPreferencesService: UserPreferencesService;
 
   constructor(private supabase: SupabaseClient<Database>) {
     this.aiService = new AIService();
     this.containerService = new ContainerService(supabase);
     this.shelfService = new ShelfService(supabase);
     this.itemService = new ItemService(supabase);
+    this.userPreferencesService = new UserPreferencesService(supabase);
   }
 
   /**
@@ -127,10 +132,14 @@ export class CommandService {
       // Get user context (containers and shelves)
       const context = await this.getUserContext(userId);
 
-      // Parse command with AI
-      const aiResult = await this.aiService.parseCommand(command.command, {
+      const actionContext: CommandContext = {
+        default_shelf_id: context.transformed_default_shelf_id || null,
         allData: context.allData,
-      });
+        previousMessages: [],
+      };
+
+      // Parse command with AI
+      const aiResult = await this.aiService.parseCommand(command.command, actionContext);
 
       if (!aiResult.actions.length) {
         return {
@@ -281,18 +290,22 @@ export class CommandService {
     return `Znaleziono ${items.length} różnych przedmiotów`;
   }
 
-  private async getUserContext(userId: string, defaultShelfId?: string): Promise<ActionContext> {
+  private async getUserContext(userId: string): Promise<ActionContext> {
     // Get user's containers
     const containers = await this.containerService.getUserContainers(userId);
 
     // Create comprehensive ID mappings for AI processing
     const { idMappings, reverseIdMappings } = this.createIdMappings(containers);
 
+    const defaultShelfId = await this.userPreferencesService.getUserDefaultShelf(userId);
+
+    const transformedDefaultShelfId = defaultShelfId ? reverseIdMappings.shelves.get(defaultShelfId) : null;
+
     // Transform data for AI with sequential shelf IDs
     const transformedData = this.transformDataForAI(containers, reverseIdMappings);
 
     return {
-      default_shelf_id: defaultShelfId,
+      transformed_default_shelf_id: transformedDefaultShelfId || null,
       allData: JSON.stringify(transformedData),
       idMappings,
       reverseIdMappings,
@@ -470,7 +483,6 @@ export class CommandService {
    */
   private transformDataForAI(containers: ContainerData[], reverseIdMappings: ActionContext["reverseIdMappings"]) {
     return containers.map((container) => ({
-      container_id: reverseIdMappings.containers.get(container.container_id),
       name: container.name,
       shelves: container.shelves.map((shelf) => ({
         shelf_id: reverseIdMappings.shelves.get(shelf.shelf_id),

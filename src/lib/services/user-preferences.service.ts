@@ -189,4 +189,23 @@ export class UserPreferencesService {
       updated_at: data.updated_at,
     };
   }
+
+  /**
+   * Get user default container
+   * @param userId - The user's ID
+   * @returns The default container ID or null if not set
+   */
+  async getUserDefaultShelf(userId: string): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from("user_preferences")
+      .select("default_shelf_id")
+      .eq("user_id", userId)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to get user default shelf: ${error.message}`);
+    }
+
+    return data?.default_shelf_id || null;
+  }
 }
