@@ -2,16 +2,17 @@ import type { APIRoute } from "astro";
 import { loginSchema } from "../../../lib/schemas/auth.schemas.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
 import { createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // POST /api/auth/login - Sign in user
-export const POST: APIRoute = async ({ locals, request }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
     // Parse request body
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return createErrorResponse(400, "Invalid JSON body" + body);
+      return createErrorResponse(400, "Invalid JSON body");
     }
 
     // Validate request body with Zod
@@ -23,11 +24,31 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     const command = validationResult.data;
 
-    // Login user using service
-    const authService = new AuthService(locals.supabase);
+    // Create response headers for cookie setting
+    const responseHeaders = new Headers();
+    
+    // Login user using service with server client
+    const supabase = createSupabaseServerClient(request, responseHeaders);
+    const authService = new AuthService(supabase);
     const result = await authService.login(command);
 
-    return createSuccessResponse(result);
+    // Set the session in the Supabase client (this will handle cookies automatically)
+    await supabase.auth.setSession({
+      access_token: result.session.access_token,
+      refresh_token: result.session.refresh_token
+    });
+
+    // Return user data with proper cookie headers
+    return new Response(JSON.stringify({
+      user: result.user,
+      message: "Login successful"
+    }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...Object.fromEntries(responseHeaders.entries())
+      }
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Login failed";
 

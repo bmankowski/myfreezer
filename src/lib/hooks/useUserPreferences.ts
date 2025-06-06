@@ -15,99 +15,57 @@ export function useUserPreferences(): UseUserPreferencesReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshTokenIfNeeded = useCallback(async (): Promise<boolean> => {
-    const token = localStorage.getItem("access_token");
-    const refreshToken = localStorage.getItem("refresh_token");
-
-    if (!token || !refreshToken) {
-      return false;
-    }
-
+  const checkAuthentication = useCallback(async (): Promise<boolean> => {
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const now = Math.floor(Date.now() / 1000);
-      const expiry = payload.exp;
+      // Check authentication by calling server health endpoint
+      const response = await fetch("/api/health", {
+        credentials: "include", // Include cookies
+      });
 
-      if (expiry - now < 300) {
-        console.log("🔄 Refreshing expired token in useUserPreferences...");
-
-        const response = await fetch("/api/auth/refresh", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("access_token", data.access_token);
-          localStorage.setItem("refresh_token", data.refresh_token);
-          console.log("✅ Token refreshed successfully in useUserPreferences");
-          return true;
-        } else {
-          console.log("❌ Token refresh failed in useUserPreferences");
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          localStorage.removeItem("user");
-          return false;
-        }
+      if (response.ok) {
+        const data = await response.json();
+        return data.authenticated;
+      } else {
+        return false;
       }
-
-      return true;
     } catch (error) {
-      console.error("Error checking/refreshing token in useUserPreferences:", error);
+      console.error("Error checking authentication:", error);
       return false;
     }
   }, []);
 
-  const getAuthHeadersWithRefresh = useCallback(async (): Promise<HeadersInit | null> => {
-    const tokenIsValid = await refreshTokenIfNeeded();
-    if (!tokenIsValid) {
-      return null;
+  const makeAuthenticatedRequest = useCallback(async (url: string, options: RequestInit = {}) => {
+    const isAuth = await checkAuthentication();
+    if (!isAuth) {
+      throw new Error("Not authenticated");
     }
 
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      return null;
-    }
-
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-  }, [refreshTokenIfNeeded]);
+    return fetch(url, {
+      ...options,
+      credentials: "include", // Include cookies
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+  }, [checkAuthentication]);
 
   const fetchPreferences = useCallback(async () => {
-    // Check if user has tokens before attempting to fetch
-    const token = localStorage.getItem("access_token");
-    const user = localStorage.getItem("user");
-
-    if (!token || !user) {
-      // User is not authenticated, set to not loading and return early
-      setIsLoading(false);
-      setError(null);
-      setPreferences(null);
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
 
-      const headers = await getAuthHeadersWithRefresh();
-      if (!headers) {
-        // Token refresh failed, user is no longer authenticated
+      // Check authentication first
+      const isAuth = await checkAuthentication();
+      if (!isAuth) {
+        // User is not authenticated, set to not loading and return early
         setIsLoading(false);
         setError(null);
         setPreferences(null);
         return;
       }
 
-      const response = await fetch("/api/user/preferences", {
-        method: "GET",
-        headers,
-      });
+      const response = await makeAuthenticatedRequest("/api/user/preferences");
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: "Failed to fetch preferences" }));
@@ -123,22 +81,16 @@ export function useUserPreferences(): UseUserPreferencesReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [getAuthHeadersWithRefresh]);
+  }, [checkAuthentication, makeAuthenticatedRequest]);
 
   const setDefaultShelf = async (shelfId: string) => {
     try {
       setError(null);
 
-      const headers = await getAuthHeadersWithRefresh();
-      if (!headers) {
-        throw new Error("Not authenticated");
-      }
-
       const command: SetDefaultShelfCommandDTO = { shelf_id: shelfId };
 
-      const response = await fetch("/api/user/preferences", {
+      const response = await makeAuthenticatedRequest("/api/user/preferences", {
         method: "PUT",
-        headers,
         body: JSON.stringify(command),
       });
 
@@ -161,14 +113,8 @@ export function useUserPreferences(): UseUserPreferencesReturn {
     try {
       setError(null);
 
-      const headers = await getAuthHeadersWithRefresh();
-      if (!headers) {
-        throw new Error("Not authenticated");
-      }
-
-      const response = await fetch("/api/user/preferences/default-shelf", {
+      const response = await makeAuthenticatedRequest("/api/user/preferences/default-shelf", {
         method: "DELETE",
-        headers,
       });
 
       if (!response.ok) {

@@ -1,20 +1,46 @@
 import type { APIRoute } from "astro";
 import type { AddItemCommandDTO } from "../../../../types.js";
 import { ItemService } from "../../../../lib/services/item.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
 import { isValidUUID, isNonEmptyString, isValidLength } from "../../../../lib/validation.utils.js";
 
-// POST /api/shelves/{shelf_id}/items - Add item to shelf
-export const POST: APIRoute = async ({ locals, request, params }) => {
+// GET /api/shelves/[shelf_id]/items - Get all items for a shelf
+// POST /api/shelves/[shelf_id]/items - Create new item in shelf
+export const GET: APIRoute = async ({ params, request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
-    if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || "Unauthorized");
+    const tokenValidation = await validateAuthToken(request);
+    if (!tokenValidation.success || !tokenValidation.user_id) {
+      return createErrorResponse(401, "Unauthorized");
     }
 
-    // Validate shelf_id
-    const { shelf_id } = params;
+    const shelf_id = params.shelf_id;
+    if (!shelf_id || !isValidUUID(shelf_id)) {
+      return createErrorResponse(400, "Invalid shelf ID format");
+    }
+
+    // Get items using service
+    const supabase = createSupabaseServerClient(request);
+    const itemService = new ItemService(supabase);
+    const items = await itemService.getItemsByShelf(shelf_id, tokenValidation.user_id);
+
+    return createSuccessResponse(items);
+  } catch (error) {
+    console.error("Get items error:", error);
+    return createErrorResponse(500, "Internal server error");
+  }
+};
+
+export const POST: APIRoute = async ({ params, request }) => {
+  try {
+    // Validate authentication
+    const tokenValidation = await validateAuthToken(request);
+    if (!tokenValidation.success || !tokenValidation.user_id) {
+      return createErrorResponse(401, "Unauthorized");
+    }
+
+    const shelf_id = params.shelf_id;
     if (!shelf_id || !isValidUUID(shelf_id)) {
       return createErrorResponse(400, "Invalid shelf ID format");
     }
@@ -41,8 +67,9 @@ export const POST: APIRoute = async ({ locals, request, params }) => {
     }
 
     // Add item using service
-    const itemService = new ItemService(locals.supabase);
-
+    const supabase = createSupabaseServerClient(request);
+    const itemService = new ItemService(supabase);
+    
     try {
       const result = await itemService.addItem(shelf_id, {
         name: body.name.trim(),
@@ -61,8 +88,21 @@ export const POST: APIRoute = async ({ locals, request, params }) => {
 
       throw error;
     }
+
+    return createSuccessResponse(item);
   } catch (error) {
-    console.error("Add item error:", error);
+    console.error("Create item error:", error);
+
+    const errorMessage = error instanceof Error ? error.message : "Item creation failed";
+
+    if (errorMessage.includes("Shelf not found")) {
+      return createErrorResponse(404, "Shelf not found");
+    }
+
+    if (errorMessage.includes("duplicate") || errorMessage.includes("unique")) {
+      return createErrorResponse(409, "An item with this name already exists in this shelf");
+    }
+
     return createErrorResponse(500, "Internal server error");
   }
 };

@@ -1,20 +1,21 @@
 import type { APIRoute } from "astro";
-import type { CommandQueryDTO } from "../../../types.js";
+import type { VoiceQueryCommandDTO } from "../../../types.js";
 import { CommandService } from "../../../lib/services/command.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 import { isValidString, isValidUUID } from "../../../lib/validation.utils.js";
 
-// POST /api/voice/query - Process voice query with AI search
-export const POST: APIRoute = async ({ locals, request }) => {
+// POST /api/voice/query - Process voice query
+export const POST: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
-    if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || "Unauthorized");
+    const tokenValidation = await validateAuthToken(request);
+    if (!tokenValidation.success || !tokenValidation.user_id) {
+      return createErrorResponse(401, "Unauthorized");
     }
 
     // Parse request body
-    let body: CommandQueryDTO;
+    let body: VoiceQueryCommandDTO;
     try {
       body = await request.json();
     } catch {
@@ -49,26 +50,31 @@ export const POST: APIRoute = async ({ locals, request }) => {
       return createErrorResponse(400, "Query too long (max 200 characters)");
     }
 
-    // Process voice query using service
-    const commandService = new CommandService(locals.supabase);
-    const result = await commandService.processQuery({
+    const command = {
       query: sanitizedQuery,
       context: body.context,
+    };
+
+    // Process voice query using service
+    const supabase = createSupabaseServerClient(request);
+    const commandService = new CommandService(supabase);
+    const result = await commandService.processQuery({
+      query: command.query,
+      context: command.context,
     });
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error("Voice query processing error:", error);
+    console.error("Process voice query error:", error);
 
-    // Handle specific error types
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Voice query processing failed";
 
-    if (errorMessage.includes("AI service") || errorMessage.includes("OpenRouter")) {
-      return createErrorResponse(503, "AI service temporarily unavailable");
+    if (errorMessage.includes("invalid query")) {
+      return createErrorResponse(400, "Invalid voice query format");
     }
 
-    if (errorMessage.includes("rate limit")) {
-      return createErrorResponse(429, "Too many requests, please try again later");
+    if (errorMessage.includes("not found")) {
+      return createErrorResponse(404, "No matching items found");
     }
 
     return createErrorResponse(500, "Internal server error");

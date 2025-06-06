@@ -1,15 +1,16 @@
 import type { APIRoute } from "astro";
 import { changePasswordSchema } from "../../../lib/schemas/auth.schemas.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
-// POST /api/auth/change-password - Change password for authenticated user
-export const POST: APIRoute = async ({ locals, request }) => {
+// POST /api/auth/change-password - Change user password
+export const POST: APIRoute = async ({ request }) => {
   try {
-    // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
-    if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || "Unauthorized");
+    // Validate authentication token
+    const tokenValidation = await validateAuthToken(request);
+    if (!tokenValidation.success || !tokenValidation.user_id) {
+      return createErrorResponse(401, "Unauthorized");
     }
 
     // Parse request body
@@ -30,13 +31,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const command = validationResult.data;
 
     // Change password using service
-    const authService = new AuthService(locals.supabase);
-
-    if (!authResult.user_id) {
-      return createErrorResponse(401, "User ID not found in authentication result");
-    }
-
-    const result = await authService.changePassword(command, authResult.user_id);
+    const supabase = createSupabaseServerClient(request);
+    const authService = new AuthService(supabase);
+    const result = await authService.changePassword(command, tokenValidation.user_id);
 
     return createSuccessResponse(result);
   } catch (error) {
@@ -44,19 +41,12 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     const errorMessage = error instanceof Error ? error.message : "Password change failed";
 
-    if (errorMessage.includes("User not authenticated")) {
-      return createErrorResponse(401, "User authentication required");
-    }
-
-    if (
-      errorMessage.includes("different from current password") ||
-      errorMessage.includes("different from the old password")
-    ) {
+    if (errorMessage.includes("New password should be different")) {
       return createErrorResponse(400, "New password must be different from current password");
     }
 
-    if (errorMessage.includes("password")) {
-      return createErrorResponse(400, errorMessage);
+    if (errorMessage.includes("Password should be at least")) {
+      return createErrorResponse(400, "Password must be at least 6 characters long");
     }
 
     return createErrorResponse(500, "Internal server error");

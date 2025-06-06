@@ -1,13 +1,14 @@
 import type { APIRoute } from "astro";
 import { ContainerService } from "../../../../lib/services/container.service.js";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
 import { isValidUUID } from "../../../../lib/validation.utils.js";
 
 // GET /api/containers/{container_id}/contents - Get container contents
-export const GET: APIRoute = async ({ locals, request, params }) => {
+export const GET: APIRoute = async ({ request, params }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -19,7 +20,8 @@ export const GET: APIRoute = async ({ locals, request, params }) => {
     }
 
     // Get container contents using service
-    const containerService = new ContainerService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const containerService = new ContainerService(supabase);
     const containerContents = await containerService.getContainerContents(container_id);
 
     if (!containerContents) {

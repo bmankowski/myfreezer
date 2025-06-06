@@ -2,18 +2,20 @@ import type { APIRoute } from "astro";
 import type { ContainerListResponseDTO, CreateContainerCommandDTO } from "../../../types.js";
 import { ContainerService } from "../../../lib/services/container.service.js";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // GET /api/containers - List user containers
-export const GET: APIRoute = async ({ locals, request }) => {
+export const GET: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Get containers using service
-    const containerService = new ContainerService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const containerService = new ContainerService(supabase);
 
     if (!authResult.user_id) {
       return createErrorResponse(401, "User ID not found in authentication result");
@@ -33,10 +35,10 @@ export const GET: APIRoute = async ({ locals, request }) => {
 };
 
 // POST /api/containers - Create new container
-export const POST: APIRoute = async ({ locals, request }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -63,7 +65,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
     }
 
     // Create container using service
-    const containerService = new ContainerService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const containerService = new ContainerService(supabase);
 
     if (!authResult.user_id) {
       return createErrorResponse(401, "User ID not found in authentication result");

@@ -1,70 +1,28 @@
 import type { APIRoute } from "astro";
 import type { ItemSearchParams } from "../../../types.js";
 import { ItemService } from "../../../lib/services/item.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
-import { isValidUUID } from "../../../lib/validation.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
-// GET /api/items - Search items with filters and pagination
-export const GET: APIRoute = async ({ locals, request, url }) => {
+// GET /api/items - Get all items for authenticated user
+export const GET: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
-    if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || "Unauthorized");
+    const tokenValidation = await validateAuthToken(request);
+    if (!tokenValidation.success || !tokenValidation.user_id) {
+      return createErrorResponse(401, "Unauthorized");
     }
 
-    // Parse query parameters
-    const searchParams = url.searchParams;
-    const params: ItemSearchParams = {};
+    // Get items using service
+    const supabase = createSupabaseServerClient(request);
+    const itemService = new ItemService(supabase);
+    const items = await itemService.searchItems({});
 
-    // Parse search query
-    const q = searchParams.get("q");
-    if (q) {
-      params.q = q;
-    }
-
-    // Parse container_id filter
-    const containerId = searchParams.get("container_id");
-    if (containerId) {
-      if (!isValidUUID(containerId)) {
-        return createErrorResponse(400, "Invalid container_id format");
-      }
-      params.container_id = containerId;
-    }
-
-    // Parse shelf_id filter
-    const shelfId = searchParams.get("shelf_id");
-    if (shelfId) {
-      if (!isValidUUID(shelfId)) {
-        return createErrorResponse(400, "Invalid shelf_id format");
-      }
-      params.shelf_id = shelfId;
-    }
-
-    // Parse pagination parameters
-    const limitParam = searchParams.get("limit");
-    if (limitParam) {
-      const limit = parseInt(limitParam, 10);
-      if (!isNaN(limit) && limit > 0) {
-        params.limit = limit;
-      }
-    }
-
-    const offsetParam = searchParams.get("offset");
-    if (offsetParam) {
-      const offset = parseInt(offsetParam, 10);
-      if (!isNaN(offset) && offset >= 0) {
-        params.offset = offset;
-      }
-    }
-
-    // Search items using service
-    const itemService = new ItemService(locals.supabase);
-    const result = await itemService.searchItems(params);
-
-    return createSuccessResponse(result);
+    return createSuccessResponse(items);
   } catch (error) {
-    console.error("Search items error:", error);
+    console.error("Get items error:", error);
     return createErrorResponse(500, "Internal server error");
   }
 };
+
+

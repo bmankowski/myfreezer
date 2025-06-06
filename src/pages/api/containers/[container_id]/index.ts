@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import type { UpdateContainerCommandDTO } from "../../../../types.js";
 import { ContainerService } from "../../../../lib/services/container.service.js";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
 import {
   isValidUUID,
   isNonEmptyString,
@@ -10,10 +11,10 @@ import {
 } from "../../../../lib/validation.utils.js";
 
 // GET /api/containers/{container_id} - Get container details
-export const GET: APIRoute = async ({ locals, request, params }) => {
+export const GET: APIRoute = async ({ request, params }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -25,7 +26,8 @@ export const GET: APIRoute = async ({ locals, request, params }) => {
     }
 
     // Get container details using service
-    const containerService = new ContainerService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const containerService = new ContainerService(supabase);
     const containerDetails = await containerService.getContainerDetails(container_id);
 
     if (!containerDetails) {
@@ -40,10 +42,10 @@ export const GET: APIRoute = async ({ locals, request, params }) => {
 };
 
 // PUT /api/containers/{container_id} - Update container
-export const PUT: APIRoute = async ({ locals, request, params }) => {
+export const PUT: APIRoute = async ({ request, params }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -77,7 +79,8 @@ export const PUT: APIRoute = async ({ locals, request, params }) => {
     }
 
     // Update container using service
-    const containerService = new ContainerService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const containerService = new ContainerService(supabase);
     const updatedContainer = await containerService.updateContainer(container_id, {
       name: body.name?.trim(),
       type: body.type,
@@ -95,10 +98,10 @@ export const PUT: APIRoute = async ({ locals, request, params }) => {
 };
 
 // DELETE /api/containers/{container_id} - Delete container
-export const DELETE: APIRoute = async ({ locals, request, params }) => {
+export const DELETE: APIRoute = async ({ request, params }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -110,7 +113,8 @@ export const DELETE: APIRoute = async ({ locals, request, params }) => {
     }
 
     // Check if container exists first
-    const containerService = new ContainerService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const containerService = new ContainerService(supabase);
     const exists = await containerService.containerExists(container_id);
 
     if (!exists) {

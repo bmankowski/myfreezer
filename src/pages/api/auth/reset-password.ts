@@ -2,9 +2,10 @@ import type { APIRoute } from "astro";
 import { resetPasswordRequestSchema } from "../../../lib/schemas/auth.schemas.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
 import { createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // POST /api/auth/reset-password - Request password reset
-export const POST: APIRoute = async ({ locals, request }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
     // Parse request body
     let body: unknown;
@@ -24,22 +25,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const command = validationResult.data;
 
     // Request password reset using service
-    const authService = new AuthService(locals.supabase);
-    const result = await authService.requestPasswordReset(command);
+    const supabase = createSupabaseServerClient(request);
+    const authService = new AuthService(supabase);
+    const result = await authService.resetPassword(command);
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error("Password reset request error:", error);
-
-    const errorMessage = error instanceof Error ? error.message : "Password reset request failed";
-
-    if (errorMessage.includes("invalid email")) {
-      return createErrorResponse(400, "Please provide a valid email address");
-    }
-
-    // Always return success for security reasons, even if email doesn't exist
-    return createSuccessResponse({
-      message: "If an account with this email exists, a password reset email has been sent.",
-    });
+    console.error("Reset password error:", error);
+    return createErrorResponse(500, "Internal server error");
   }
 };

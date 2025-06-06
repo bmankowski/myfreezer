@@ -1,34 +1,23 @@
 import type { APIRoute } from "astro";
 import type { HealthCheckResponseDTO } from "../../types.js";
+import { validateAuthToken } from "../../lib/auth.utils.js";
 
-export const GET: APIRoute = async ({ locals, request }) => {
+export const GET: APIRoute = async ({ request }) => {
   try {
     // Initialize response with default values
     let authenticated = false;
     let user_id: string | null = null;
 
-    // Check if Authorization header is present
-    const authHeader = request.headers.get("Authorization");
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      try {
-        // Extract token from Bearer authorization
-        const token = authHeader.replace("Bearer ", "");
-
-        // Validate JWT token with Supabase
-        const {
-          data: { user },
-          error,
-        } = await locals.supabase.auth.getUser(token);
-
-        if (!error && user) {
-          authenticated = true;
-          user_id = user.id;
-        }
-      } catch (tokenError) {
-        // Token validation failed - log but don't error out
-        console.warn("Token validation failed in health check:", tokenError);
+    // Check authentication using cookie-based validation
+    try {
+      const authResult = await validateAuthToken(request);
+      if (authResult.success && authResult.user_id) {
+        authenticated = true;
+        user_id = authResult.user_id;
       }
+    } catch (authError) {
+      // Authentication validation failed - log but don't error out
+      console.warn("Authentication validation failed in health check:", authError);
     }
 
     // Construct response

@@ -33,145 +33,131 @@ export function useDashboard() {
     isAuthenticated: null,
   });
 
-  const refreshTokenIfNeeded = useCallback(async (): Promise<boolean> => {
-    const token = localStorage.getItem("access_token");
-    const refreshToken = localStorage.getItem("refresh_token");
-
-    if (!token || !refreshToken) {
-      setState((prev) => ({ ...prev, isAuthenticated: false }));
-      return false;
-    }
-
+  const checkAuth = useCallback(async (): Promise<boolean> => {
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const now = Math.floor(Date.now() / 1000);
-      const expiry = payload.exp;
+      // Check authentication by calling server health endpoint
+      const response = await fetch("/api/health", {
+        credentials: "include", // Include cookies
+      });
 
-      if (expiry - now < 300) {
-        console.log("🔄 Refreshing expired token...");
+      if (response.ok) {
+        const data = await response.json();
+        const isAuth = data.authenticated;
 
-        const response = await fetch("/api/auth/refresh", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ refreshToken }),
+        console.log("🔍 Auth check:", {
+          status: data.status,
+          authenticated: data.authenticated,
+          user_id: data.user_id,
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("access_token", data.access_token);
-          localStorage.setItem("refresh_token", data.refresh_token);
-          console.log("✅ Token refreshed successfully");
-          return true;
-        } else {
-          console.log("❌ Token refresh failed");
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          localStorage.removeItem("user");
-          setState((prev) => ({ ...prev, isAuthenticated: false }));
-          return false;
-        }
+        setState((prev) => ({ ...prev, isAuthenticated: isAuth }));
+        return isAuth;
+      } else {
+        setState((prev) => ({ ...prev, isAuthenticated: false }));
+        return false;
       }
-
-      return true;
     } catch (error) {
-      console.error("Error checking/refreshing token:", error);
+      console.error("Error checking authentication:", error);
       setState((prev) => ({ ...prev, isAuthenticated: false }));
       return false;
     }
   }, []);
 
-  const getAuthHeadersWithRefresh = useCallback(async (): Promise<HeadersInit | null> => {
-    const tokenIsValid = await refreshTokenIfNeeded();
-    if (!tokenIsValid) {
-      return null;
-    }
+  const makeAuthenticatedRequest = useCallback(
+    async (url: string, options: RequestInit = {}) => {
+      const isAuth = await checkAuth();
+      if (!isAuth) {
+        throw new Error("Not authenticated");
+      }
 
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      setState((prev) => ({ ...prev, isAuthenticated: false }));
-      return null;
-    }
+      return fetch(url, {
+        ...options,
+        credentials: "include", // Include cookies
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+    },
+    [checkAuth]
+  );
 
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-  }, [refreshTokenIfNeeded]);
+  const refreshContainers = useCallback(async () => {
+    console.log("🔄 Refreshing containers...");
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-  const checkAuth = useCallback(() => {
-    const token = localStorage.getItem("access_token");
-    const user = localStorage.getItem("user");
-    const isAuth = !!(token && user);
-
-    console.log("🔍 Auth check:", {
-      hasToken: !!token,
-      hasUser: !!user,
-      isAuth,
-      user: user ? JSON.parse(user) : null,
-    });
-
-    setState((prev) => ({ ...prev, isAuthenticated: isAuth }));
-    return isAuth;
-  }, []);
-
-  const loadContainers = useCallback(async () => {
     try {
-      console.log("📦 Loading containers...");
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      const headers = await getAuthHeadersWithRefresh();
-      if (!headers) return;
-
-      const response = await fetch("/api/containers", { headers });
+      const response = await makeAuthenticatedRequest("/api/containers");
 
       if (!response.ok) {
         if (response.status === 401) {
-          setState((prev) => ({ ...prev, isAuthenticated: false }));
+          setState((prev) => ({ ...prev, isAuthenticated: false, isLoading: false }));
           return;
         }
-        throw new Error(`Failed to load containers: ${response.statusText}`);
+        throw new Error(`Failed to fetch containers: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("📦 Containers loaded:", { count: data.containers?.length || 0, containers: data.containers });
+      console.log("✅ Containers loaded:", data.containers?.length || 0);
+
       setState((prev) => ({
         ...prev,
         containers: data.containers || [],
         isLoading: false,
+        error: null,
       }));
     } catch (error) {
-      console.error("📦 Failed to load containers:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to load containers";
+      console.error("❌ Container loading error:", errorMessage);
       setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : "Failed to load containers",
+        error: errorMessage,
         isLoading: false,
+        containers: [],
       }));
     }
-  }, [getAuthHeadersWithRefresh]);
+  }, [makeAuthenticatedRequest]);
+
+  // Initial authentication check and data loading
+  useEffect(() => {
+    const initializeData = async () => {
+      console.log("🏠 Dashboard initializing...");
+      const isAuth = await checkAuth();
+
+      if (isAuth) {
+        await refreshContainers();
+      } else {
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    initializeData();
+  }, [checkAuth, refreshContainers]);
+
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log("🏠 Dashboard state:", {
+      isAuthenticated: state.isAuthenticated,
+      isLoading: state.isLoading,
+      containersCount: state.containers.length,
+      defaultShelf: state.containers[0]?.shelves?.[0]?.shelf_id,
+    });
+  }, [state.isAuthenticated, state.isLoading, state.containers]);
 
   const searchItems = useCallback(
     async (query: string) => {
-      if (query.length < 2) {
-        setState((prev) => ({ ...prev, searchQuery: query, searchResults: [] }));
+      if (!query.trim()) {
+        setState((prev) => ({ ...prev, searchResults: [], isSearching: false }));
         return;
       }
 
+      setState((prev) => ({ ...prev, isSearching: true }));
+
       try {
-        setState((prev) => ({ ...prev, searchQuery: query, isSearching: true }));
-
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) {
-          setState((prev) => ({ ...prev, isSearching: false }));
-          return;
-        }
-
-        const params = new URLSearchParams({ q: query });
-        const response = await fetch(`/api/items?${params}`, { headers });
+        const response = await makeAuthenticatedRequest(`/api/items?q=${encodeURIComponent(query)}`);
 
         if (!response.ok) {
-          throw new Error("Search failed");
+          throw new Error(`Search failed: ${response.status}`);
         }
 
         const data = await response.json();
@@ -180,373 +166,283 @@ export function useDashboard() {
           searchResults: data.items || [],
           isSearching: false,
         }));
-      } catch {
+      } catch (error) {
+        console.error("Search error:", error);
         setState((prev) => ({
           ...prev,
           searchResults: [],
           isSearching: false,
-          error: "Search failed",
+          error: error instanceof Error ? error.message : "Search failed",
         }));
       }
     },
-    [getAuthHeadersWithRefresh]
-  );
-
-  const createContainer = useCallback(
-    async (data: CreateContainerCommandDTO) => {
-      try {
-        console.log("➕ Creating container:", data);
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch("/api/containers", {
-          method: "POST",
-          headers,
-          body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to create container");
-        }
-
-        const result = await response.json();
-        console.log("➕ Container created successfully:", result);
-
-        console.log("🔄 Refreshing containers list...");
-        await loadContainers(); // Refresh data
-      } catch (error) {
-        console.error("➕ Failed to create container:", error);
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to create container",
-        }));
-      }
-    },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest]
   );
 
   const updateContainer = useCallback(
-    async (id: string, data: UpdateContainerCommandDTO) => {
+    async (containerId: string, updates: UpdateContainerCommandDTO) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/containers/${id}`, {
+        const response = await makeAuthenticatedRequest(`/api/containers/${containerId}`, {
           method: "PUT",
-          headers,
-          body: JSON.stringify(data),
+          body: JSON.stringify(updates),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to update container");
+          throw new Error(`Failed to update container: ${response.status}`);
         }
 
-        await loadContainers(); // Refresh data
+        await refreshContainers();
+        return await response.json();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to update container",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to update container";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
+  );
+
+  const createContainer = useCallback(
+    async (containerData: CreateContainerCommandDTO) => {
+      try {
+        const response = await makeAuthenticatedRequest("/api/containers", {
+          method: "POST",
+          body: JSON.stringify(containerData),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to create container: ${response.status}`);
+        }
+
+        await refreshContainers();
+        return await response.json();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to create container";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
+      }
+    },
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
   const deleteContainer = useCallback(
-    async (id: string) => {
+    async (containerId: string) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/containers/${id}`, {
+        const response = await makeAuthenticatedRequest(`/api/containers/${containerId}`, {
           method: "DELETE",
-          headers,
         });
 
         if (!response.ok) {
-          throw new Error("Failed to delete container");
+          throw new Error(`Failed to delete container: ${response.status}`);
         }
 
-        await loadContainers(); // Refresh data
+        await refreshContainers();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to delete container",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to delete container";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
-  const addShelf = useCallback(
-    async (containerId: string, data: CreateShelfCommandDTO) => {
+  const createShelf = useCallback(
+    async (containerId: string, shelfData: CreateShelfCommandDTO) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/containers/${containerId}/shelves`, {
+        const response = await makeAuthenticatedRequest(`/api/containers/${containerId}/shelves`, {
           method: "POST",
-          headers,
-          body: JSON.stringify(data),
+          body: JSON.stringify(shelfData),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to add shelf");
+          throw new Error(`Failed to create shelf: ${response.status}`);
         }
 
-        await loadContainers(); // Refresh data
+        await refreshContainers();
+        return await response.json();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to add shelf",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to create shelf";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
   const updateShelf = useCallback(
-    async (shelfId: string, data: UpdateShelfCommandDTO) => {
+    async (shelfId: string, updates: UpdateShelfCommandDTO) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/shelves/${shelfId}`, {
+        const response = await makeAuthenticatedRequest(`/api/shelves/${shelfId}`, {
           method: "PUT",
-          headers,
-          body: JSON.stringify(data),
+          body: JSON.stringify(updates),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to update shelf");
+          throw new Error(`Failed to update shelf: ${response.status}`);
         }
 
-        await loadContainers(); // Refresh data
+        await refreshContainers();
+        return await response.json();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to update shelf",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to update shelf";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
   const deleteShelf = useCallback(
     async (shelfId: string) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/shelves/${shelfId}`, {
+        const response = await makeAuthenticatedRequest(`/api/shelves/${shelfId}`, {
           method: "DELETE",
-          headers,
         });
 
         if (!response.ok) {
-          throw new Error("Failed to delete shelf");
+          throw new Error(`Failed to delete shelf: ${response.status}`);
         }
 
-        await loadContainers(); // Refresh data
+        await refreshContainers();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to delete shelf",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to delete shelf";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
   const addItem = useCallback(
-    async (shelfId: string, data: AddItemCommandDTO) => {
+    async (itemData: AddItemCommandDTO) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/shelves/${shelfId}/items`, {
+        const response = await makeAuthenticatedRequest("/api/items", {
           method: "POST",
-          headers,
-          body: JSON.stringify(data),
+          body: JSON.stringify(itemData),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to add item");
+          throw new Error(`Failed to add item: ${response.status}`);
         }
 
-        await loadContainers(); // Refresh data
+        await refreshContainers();
+        return await response.json();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to add item",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to add item";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
   const updateItemQuantity = useCallback(
-    async (itemId: string, data: UpdateItemQuantityCommandDTO) => {
+    async (itemId: string, quantityData: UpdateItemQuantityCommandDTO | RemoveItemQuantityCommandDTO) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return null;
-
-        const response = await fetch(`/api/items/${itemId}`, {
+        const response = await makeAuthenticatedRequest(`/api/items/${itemId}/quantity`, {
           method: "PUT",
-          headers,
-          body: JSON.stringify(data),
+          body: JSON.stringify(quantityData),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to update item quantity");
+          throw new Error(`Failed to update item quantity: ${response.status}`);
         }
 
-        const result = await response.json();
-        await loadContainers(); // Refresh data
-        return result;
+        await refreshContainers();
+        return await response.json();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to update item quantity",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to update item quantity";
+        setState((prev) => ({ ...prev, error: errorMessage }));
         throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
-  const removeItemQuantity = useCallback(
-    async (itemId: string, data: RemoveItemQuantityCommandDTO) => {
+  const moveItem = useCallback(
+    async (itemId: string, moveData: MoveItemCommandDTO) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return null;
-
-        const response = await fetch(`/api/items/${itemId}/remove`, {
-          method: "PATCH",
-          headers,
-          body: JSON.stringify(data),
+        const response = await makeAuthenticatedRequest(`/api/items/${itemId}/move`, {
+          method: "PUT",
+          body: JSON.stringify(moveData),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to remove item quantity");
+          throw new Error(`Failed to move item: ${response.status}`);
         }
 
-        const result = await response.json();
-        await loadContainers(); // Refresh data
-        return result;
+        await refreshContainers();
+        return await response.json();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to remove item quantity",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to move item";
+        setState((prev) => ({ ...prev, error: errorMessage }));
         throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
   const deleteItem = useCallback(
     async (itemId: string) => {
       try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/items/${itemId}`, {
+        const response = await makeAuthenticatedRequest(`/api/items/${itemId}`, {
           method: "DELETE",
-          headers,
         });
 
         if (!response.ok) {
-          throw new Error("Failed to delete item");
+          throw new Error(`Failed to delete item: ${response.status}`);
         }
 
-        await loadContainers(); // Refresh data
+        await refreshContainers();
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to delete item",
-        }));
+        const errorMessage = error instanceof Error ? error.message : "Failed to delete item";
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        throw error;
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [makeAuthenticatedRequest, refreshContainers]
   );
 
-  const moveItem = useCallback(
-    async (itemId: string, data: MoveItemCommandDTO) => {
-      try {
-        const headers = await getAuthHeadersWithRefresh();
-        if (!headers) return;
-
-        const response = await fetch(`/api/items/${itemId}/move`, {
-          method: "PATCH",
-          headers,
-          body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to move item");
-        }
-
-        await loadContainers(); // Refresh data
-      } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to move item",
-        }));
+  const handleSearchQuery = useCallback(
+    (query: string) => {
+      setState((prev) => ({ ...prev, searchQuery: query }));
+      if (query.trim()) {
+        searchItems(query);
+      } else {
+        setState((prev) => ({ ...prev, searchResults: [], isSearching: false }));
       }
     },
-    [getAuthHeadersWithRefresh, loadContainers]
+    [searchItems]
   );
 
-  // Initialize on mount
-  useEffect(() => {
-    const initializeDashboard = async () => {
-      const isAuthenticated = checkAuth();
-      if (isAuthenticated) {
-        await loadContainers();
-      }
-    };
-
-    initializeDashboard();
-
-    // Listen for focus events to recheck auth (in case user logged out in another tab)
-    const handleFocus = () => {
-      const isAuthenticated = checkAuth();
-      if (!isAuthenticated) {
-        setState((prev) => ({
-          ...prev,
-          containers: [],
-          searchResults: [],
-          searchQuery: "",
-        }));
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [checkAuth, loadContainers]);
+  const clearError = useCallback(() => {
+    setState((prev) => ({ ...prev, error: null }));
+  }, []);
 
   return {
-    state,
-    actions: {
-      loadContainers,
-      searchItems,
-      createContainer,
-      updateContainer,
-      deleteContainer,
-      addShelf,
-      updateShelf,
-      deleteShelf,
-      addItem,
-      updateItemQuantity,
-      removeItemQuantity,
-      deleteItem,
-      moveItem,
-      checkAuth,
-    },
+    // State
+    containers: state.containers,
+    isLoading: state.isLoading,
+    error: state.error,
+    searchQuery: state.searchQuery,
+    searchResults: state.searchResults,
+    isSearching: state.isSearching,
+    isAuthenticated: state.isAuthenticated,
+
+    // Actions
+    refreshContainers,
+    updateContainer,
+    createContainer,
+    deleteContainer,
+    createShelf,
+    updateShelf,
+    deleteShelf,
+    addItem,
+    updateItemQuantity,
+    moveItem,
+    deleteItem,
+    searchItems: handleSearchQuery,
+    clearError,
+    checkAuth,
   };
 }

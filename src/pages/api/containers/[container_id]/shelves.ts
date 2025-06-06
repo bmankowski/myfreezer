@@ -1,20 +1,46 @@
 import type { APIRoute } from "astro";
 import type { CreateShelfCommandDTO } from "../../../../types.js";
 import { ShelfService } from "../../../../lib/services/shelf.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
 import { isValidUUID, isNonEmptyString, isValidLength } from "../../../../lib/validation.utils.js";
 
-// POST /api/containers/{container_id}/shelves - Create new shelf
-export const POST: APIRoute = async ({ locals, request, params }) => {
+// GET /api/containers/[container_id]/shelves - Get all shelves for a container
+// POST /api/containers/[container_id]/shelves - Create new shelf in container
+export const GET: APIRoute = async ({ params, request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
-    if (!authResult.success) {
-      return createErrorResponse(401, authResult.error || "Unauthorized");
+    const tokenValidation = await validateAuthToken(request);
+    if (!tokenValidation.success || !tokenValidation.user_id) {
+      return createErrorResponse(401, "Unauthorized");
     }
 
-    // Validate container_id
-    const { container_id } = params;
+    const container_id = params.container_id;
+    if (!container_id || !isValidUUID(container_id)) {
+      return createErrorResponse(400, "Invalid container ID format");
+    }
+
+    // Get shelves using service
+    const supabase = createSupabaseServerClient(request);
+    const shelfService = new ShelfService(supabase);
+    const shelves = await shelfService.getShelvesByContainer(container_id, tokenValidation.user_id);
+
+    return createSuccessResponse(shelves);
+  } catch (error) {
+    console.error("Get shelves error:", error);
+    return createErrorResponse(500, "Internal server error");
+  }
+};
+
+export const POST: APIRoute = async ({ params, request }) => {
+  try {
+    // Validate authentication
+    const tokenValidation = await validateAuthToken(request);
+    if (!tokenValidation.success || !tokenValidation.user_id) {
+      return createErrorResponse(401, "Unauthorized");
+    }
+
+    const container_id = params.container_id;
     if (!container_id || !isValidUUID(container_id)) {
       return createErrorResponse(400, "Invalid container ID format");
     }
@@ -41,8 +67,9 @@ export const POST: APIRoute = async ({ locals, request, params }) => {
     }
 
     // Create shelf using service
-    const shelfService = new ShelfService(locals.supabase);
-
+    const supabase = createSupabaseServerClient(request);
+    const shelfService = new ShelfService(supabase);
+    
     try {
       const shelf = await shelfService.createShelf(container_id, {
         name: body.name.trim(),
@@ -63,8 +90,17 @@ export const POST: APIRoute = async ({ locals, request, params }) => {
 
       throw error;
     }
+
+    return createSuccessResponse(shelf);
   } catch (error) {
     console.error("Create shelf error:", error);
+
+    const errorMessage = error instanceof Error ? error.message : "Shelf creation failed";
+
+    if (errorMessage.includes("duplicate") || errorMessage.includes("unique")) {
+      return createErrorResponse(409, "A shelf with this name already exists in this container");
+    }
+
     return createErrorResponse(500, "Internal server error");
   }
 };

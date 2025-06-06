@@ -2,9 +2,10 @@ import type { APIRoute } from "astro";
 import { verifyEmailSchema } from "../../../lib/schemas/auth.schemas.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
 import { createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // POST /api/auth/verify-email - Verify email with token
-export const POST: APIRoute = async ({ locals, request }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
     // Parse request body
     let body: unknown;
@@ -24,7 +25,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const command = validationResult.data;
 
     // Verify email using service
-    const authService = new AuthService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const authService = new AuthService(supabase);
     const result = await authService.verifyEmail(command);
 
     return createSuccessResponse(result);

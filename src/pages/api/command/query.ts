@@ -1,14 +1,15 @@
 import type { APIRoute } from "astro";
 import type { CommandQueryDTO } from "../../../types.js";
 import { CommandService } from "../../../lib/services/command.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 import { isValidString, isValidUUID } from "../../../lib/validation.utils.js";
 
-// POST /api/command/query - Process text query with AI search
-export const POST: APIRoute = async ({ locals, request }) => {
+// POST /api/command/query - Process command query with AI search
+export const POST: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -49,8 +50,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
       return createErrorResponse(400, "Query too long (max 200 characters)");
     }
 
-    // Process text query using service
-    const commandService = new CommandService(locals.supabase);
+    // Process command query using service
+    const supabase = createSupabaseServerClient(request);
+    const commandService = new CommandService(supabase);
     const result = await commandService.processQuery({
       query: sanitizedQuery,
       context: body.context,
@@ -58,7 +60,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     return createSuccessResponse(result);
   } catch (error) {
-    console.error("Text query processing error:", error);
+    console.error("Command query processing error:", error);
 
     // Handle specific error types
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

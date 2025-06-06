@@ -2,18 +2,20 @@ import type { APIRoute } from "astro";
 import { updateProfileSchema } from "../../../lib/schemas/auth.schemas.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // GET /api/auth/profile - Get current user profile
-export const GET: APIRoute = async ({ locals, request }) => {
+export const GET: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Get user profile using service
-    const authService = new AuthService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const authService = new AuthService(supabase);
 
     if (!authResult.user_id) {
       return createErrorResponse(401, "User ID not found in authentication result");
@@ -36,10 +38,10 @@ export const GET: APIRoute = async ({ locals, request }) => {
 };
 
 // PUT /api/auth/profile - Update user profile
-export const PUT: APIRoute = async ({ locals, request }) => {
+export const PUT: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -62,7 +64,8 @@ export const PUT: APIRoute = async ({ locals, request }) => {
     const command = validationResult.data;
 
     // Update profile using service
-    const authService = new AuthService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const authService = new AuthService(supabase);
 
     if (!authResult.user_id) {
       return createErrorResponse(401, "User ID not found in authentication result");

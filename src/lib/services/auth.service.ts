@@ -28,8 +28,9 @@ export class AuthService {
 
   /**
    * Register a new user with email and password
+   * Returns session data for cookie setting if user is auto-confirmed
    */
-  async register(command: RegisterCommandDTO): Promise<RegisterResponseDTO> {
+  async register(command: RegisterCommandDTO): Promise<RegisterResponseDTO & { session?: any }> {
     try {
       const { data, error } = await this.supabase.auth.signUp({
         email: command.email,
@@ -59,6 +60,8 @@ export class AuthService {
         },
         message: "Registration successful. Please check your email for verification.",
         email_confirmation_required: !data.user.email_confirmed_at,
+        // Include session if user is auto-confirmed (for cookie setting)
+        session: data.session || undefined,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Registration failed";
@@ -68,8 +71,9 @@ export class AuthService {
 
   /**
    * Sign in user with email and password
+   * Returns session data for cookie setting in API route
    */
-  async login(command: LoginCommandDTO): Promise<LoginResponseDTO> {
+  async login(command: LoginCommandDTO): Promise<LoginResponseDTO & { session: any }> {
     try {
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email: command.email,
@@ -91,10 +95,13 @@ export class AuthService {
           firstName: data.user.user_metadata?.firstName,
           lastName: data.user.user_metadata?.lastName,
         },
+        // Keep existing fields for backward compatibility during transition
         access_token: data.session.access_token,
         refresh_token: data.session.refresh_token,
         expires_in: data.session.expires_in,
         token_type: "Bearer",
+        // Add session for cookie setting
+        session: data.session,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Login failed";

@@ -2,19 +2,21 @@ import type { APIRoute } from "astro";
 import type { SetDefaultShelfCommandDTO } from "../../../types.js";
 import { UserPreferencesService } from "../../../lib/services/user-preferences.service.js";
 import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 import { isValidUUID } from "../../../lib/validation.utils.js";
 
 // GET /api/user/preferences - Get user preferences
-export const GET: APIRoute = async ({ locals, request }) => {
+export const GET: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Get user preferences using service
-    const userPreferencesService = new UserPreferencesService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const userPreferencesService = new UserPreferencesService(supabase);
 
     if (!authResult.user_id) {
       return createErrorResponse(401, "User ID not found in authentication result");
@@ -35,10 +37,10 @@ export const GET: APIRoute = async ({ locals, request }) => {
 };
 
 // PUT /api/user/preferences - Update user preferences (set default shelf)
-export const PUT: APIRoute = async ({ locals, request }) => {
+export const PUT: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
@@ -57,7 +59,8 @@ export const PUT: APIRoute = async ({ locals, request }) => {
     }
 
     // Set default shelf using service
-    const userPreferencesService = new UserPreferencesService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const userPreferencesService = new UserPreferencesService(supabase);
 
     if (!authResult.user_id) {
       return createErrorResponse(401, "User ID not found in authentication result");
@@ -80,16 +83,17 @@ export const PUT: APIRoute = async ({ locals, request }) => {
 };
 
 // DELETE /api/user/preferences/default-shelf - Clear default shelf
-export const DELETE: APIRoute = async ({ locals, request }) => {
+export const DELETE: APIRoute = async ({ request }) => {
   try {
     // Validate authentication
-    const authResult = await validateAuthToken(request, locals.supabase);
+    const authResult = await validateAuthToken(request);
     if (!authResult.success) {
       return createErrorResponse(401, authResult.error || "Unauthorized");
     }
 
     // Clear default shelf using service
-    const userPreferencesService = new UserPreferencesService(locals.supabase);
+    const supabase = createSupabaseServerClient(request);
+    const userPreferencesService = new UserPreferencesService(supabase);
 
     if (!authResult.user_id) {
       return createErrorResponse(401, "User ID not found in authentication result");

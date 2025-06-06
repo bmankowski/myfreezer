@@ -2,9 +2,10 @@ import type { APIRoute } from "astro";
 import { registerSchema } from "../../../lib/schemas/auth.schemas.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
 import { createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // POST /api/auth/register - Register new user
-export const POST: APIRoute = async ({ locals, request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     // Parse request body
     let body: unknown;
@@ -23,11 +24,36 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     const command = validationResult.data;
 
-    // Register user using service
-    const authService = new AuthService(locals.supabase);
+    // Register user using service with server client
+    const supabase = createSupabaseServerClient(request);
+    const authService = new AuthService(supabase);
     const result = await authService.register(command);
 
-    return createSuccessResponse(result, 201);
+    // Set cookies if user is auto-confirmed (has session)
+    if (result.session) {
+      cookies.set('sb-access-token', result.session.access_token, {
+        httpOnly: true,
+        secure: import.meta.env.PROD,
+        sameSite: 'lax',
+        maxAge: 60 * 60, // 1 hour
+        path: '/'
+      });
+
+      cookies.set('sb-refresh-token', result.session.refresh_token, {
+        httpOnly: true,
+        secure: import.meta.env.PROD,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: '/'
+      });
+    }
+
+    // Return user data without session data
+    return createSuccessResponse({
+      user: result.user,
+      message: result.message,
+      email_confirmation_required: result.email_confirmation_required
+    }, 201);
   } catch (error) {
     console.error("Registration error:", error);
 
