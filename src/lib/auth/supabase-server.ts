@@ -87,6 +87,46 @@ function serializeCookie(name: string, value: string, options: any): string {
   return cookie;
 }
 
+export function createSupabaseServerClientWithCookies(request: Request, astroContext?: { cookies: any }) {
+  return createServerClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL!, import.meta.env.PUBLIC_SUPABASE_ANON_KEY!, {
+    cookies: {
+      get(name: string) {
+        if (astroContext?.cookies) {
+          const value = astroContext.cookies.get(name)?.value;
+          console.log("🍪 Getting cookie via Astro:", name, "->", value ? "found" : "not found");
+          return value;
+        }
+        
+        // Fallback to manual parsing
+        const cookieHeader = request.headers.get("cookie");
+        if (!cookieHeader) return undefined;
+
+        const cookies = Object.fromEntries(
+          cookieHeader.split("; ").map((cookie) => {
+            const [key, value] = cookie.split("=");
+            return [key, decodeURIComponent(value)];
+          })
+        );
+
+        console.log("🍪 Getting cookie manually:", name, "->", cookies[name] ? "found" : "not found");
+        return cookies[name];
+      },
+      set(name: string, value: string, options: any) {
+        console.log("🍪 Set cookie called:", name, "options:", options);
+        if (astroContext?.cookies) {
+          astroContext.cookies.set(name, value, options);
+        }
+      },
+      remove(name: string, options: any) {
+        console.log("🍪 Remove cookie called:", name, "options:", options);
+        if (astroContext?.cookies) {
+          astroContext.cookies.delete(name, options);
+        }
+      },
+    },
+  });
+}
+
 export function createSupabaseAdminClient() {
   return createServerClient<Database>(
     import.meta.env.PUBLIC_SUPABASE_URL!,
