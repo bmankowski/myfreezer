@@ -7,7 +7,7 @@ import { ContainerGrid } from "./dashboard/ContainerGrid";
 import { FloatingMicrophone } from "./dashboard/FloatingMicrophone";
 import { ToastContainer } from "./dashboard/ToastContainer";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { CreateShelfCommandDTO, AddItemCommandDTO } from "@/types";
+import type { AddItemCommandDTO, CreateShelfCommandDTO } from "@/types";
 
 export function Dashboard() {
   const {
@@ -27,13 +27,10 @@ export function Dashboard() {
     createShelf,
     updateShelf,
     deleteShelf,
-    addItem,
     updateItemQuantity,
-    moveItem,
     deleteItem,
     searchItems,
     clearError,
-    checkAuth,
   } = useDashboard();
   const { preferences, setDefaultShelf } = useUserPreferences();
   const { toasts, addToast, dismissToast } = useToasts();

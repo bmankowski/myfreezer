@@ -1,15 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
 import type {
-  ContainerDetailsDTO,
-  ShelfWithItemsDTO,
+  ContainerContentsDTO,
   ContainerDTO,
-  CreateContainerEntity,
+  ContainerDetailsDTO,
   CreateContainerCommandDTO,
+  CreateContainerEntity,
+  DeleteResponseDTO,
+  ShelfWithItemsDTO,
   UpdateContainerCommandDTO,
   UpdateContainerEntity,
-  DeleteResponseDTO,
-  ContainerContentsDTO,
 } from "../../types.js";
 
 export class ContainerService {

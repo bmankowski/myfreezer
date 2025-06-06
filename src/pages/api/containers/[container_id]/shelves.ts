@@ -3,7 +3,7 @@ import type { CreateShelfCommandDTO } from "../../../../types.js";
 import { ShelfService } from "../../../../lib/services/shelf.service.js";
 import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
-import { isValidUUID, isNonEmptyString, isValidLength } from "../../../../lib/validation.utils.js";
+import { isNonEmptyString, isValidLength, isValidUUID } from "../../../../lib/validation.utils.js";
 
 // GET /api/containers/[container_id]/shelves - Get all shelves for a container
 // POST /api/containers/[container_id]/shelves - Create new shelf in container
@@ -69,7 +69,7 @@ export const POST: APIRoute = async ({ params, request }) => {
     // Create shelf using service
     const supabase = createSupabaseServerClient(request);
     const shelfService = new ShelfService(supabase);
-    
+
     try {
       const shelf = await shelfService.createShelf(container_id, {
         name: body.name.trim(),

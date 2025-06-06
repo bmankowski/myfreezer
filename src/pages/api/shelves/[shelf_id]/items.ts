@@ -3,7 +3,7 @@ import type { AddItemCommandDTO } from "../../../../types.js";
 import { ItemService } from "../../../../lib/services/item.service.js";
 import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
-import { isValidUUID, isNonEmptyString, isValidLength } from "../../../../lib/validation.utils.js";
+import { isNonEmptyString, isValidLength, isValidUUID } from "../../../../lib/validation.utils.js";
 
 // GET /api/shelves/[shelf_id]/items - Get all items for a shelf
 // POST /api/shelves/[shelf_id]/items - Create new item in shelf
@@ -69,7 +69,7 @@ export const POST: APIRoute = async ({ params, request }) => {
     // Add item using service
     const supabase = createSupabaseServerClient(request);
     const itemService = new ItemService(supabase);
-    
+
     try {
       const result = await itemService.addItem(shelf_id, {
         name: body.name.trim(),

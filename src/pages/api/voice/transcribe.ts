@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
-import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 import OpenAI from "openai";
 
 const openai = new OpenAI({

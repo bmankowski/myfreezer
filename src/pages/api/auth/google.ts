@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { createSupabaseServerClientWithCookies } from "../../../lib/auth/supabase-server.js";
-import { createErrorResponse } from "../../../lib/auth.utils.js";
 
 // GET /api/auth/google - Initiate Google OAuth flow
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
@@ -46,11 +45,11 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
 
     console.log("✅ Google OAuth URL generated, redirecting to Google");
     console.log("🍪 PKCE cookies should now be set via Astro cookies API");
-    
+
     // Redirect to Google OAuth - cookies should be automatically included in response
     return redirect(data.url);
   } catch (error) {
     console.error("Google OAuth endpoint error:", error);
     return redirect("/login?error=oauth_init_failed");
   }
-}; 
+};

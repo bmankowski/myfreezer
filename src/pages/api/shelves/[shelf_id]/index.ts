@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import type { UpdateShelfCommandDTO } from "../../../../types.js";
-import { isValidUUID, isNonEmptyString, isValidLength } from "../../../../lib/validation.utils.js";
+import { isNonEmptyString, isValidLength, isValidUUID } from "../../../../lib/validation.utils.js";
 import { ShelfService } from "../../../../lib/services/shelf.service.js";
 import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
@@ -77,7 +77,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
     // Update shelf using service
     const supabase = createSupabaseServerClient(request);
     const shelfService = new ShelfService(supabase);
-    
+
     try {
       const updatedShelf = await shelfService.updateShelf(shelf_id, {
         name: body.name?.trim(),

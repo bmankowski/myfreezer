@@ -31,29 +31,32 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Set cookies if user is auto-confirmed (has session)
     if (result.session) {
-      cookies.set('sb-access-token', result.session.access_token, {
+      cookies.set("sb-access-token", result.session.access_token, {
         httpOnly: true,
         secure: import.meta.env.PROD,
-        sameSite: 'lax',
+        sameSite: "lax",
         maxAge: 60 * 60, // 1 hour
-        path: '/'
+        path: "/",
       });
 
-      cookies.set('sb-refresh-token', result.session.refresh_token, {
+      cookies.set("sb-refresh-token", result.session.refresh_token, {
         httpOnly: true,
         secure: import.meta.env.PROD,
-        sameSite: 'lax',
+        sameSite: "lax",
         maxAge: 60 * 60 * 24 * 7, // 1 week
-        path: '/'
+        path: "/",
       });
     }
 
     // Return user data without session data
-    return createSuccessResponse({
-      user: result.user,
-      message: result.message,
-      email_confirmation_required: result.email_confirmation_required
-    }, 201);
+    return createSuccessResponse(
+      {
+        user: result.user,
+        message: result.message,
+        email_confirmation_required: result.email_confirmation_required,
+      },
+      201
+    );
   } catch (error) {
     console.error("Registration error:", error);
 

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { updateProfileSchema } from "../../../lib/schemas/auth.schemas.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // GET /api/auth/profile - Get current user profile

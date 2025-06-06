@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { UserPreferencesService } from "../../../../lib/services/user-preferences.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
 
 // DELETE /api/user/preferences/default-shelf - Clear default shelf

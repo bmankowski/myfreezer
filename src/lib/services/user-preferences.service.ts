@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
-import type { UserPreferencesDTO, SetDefaultShelfCommandDTO, SetDefaultShelfResponseDTO } from "../../types.js";
+import type { SetDefaultShelfCommandDTO, SetDefaultShelfResponseDTO, UserPreferencesDTO } from "../../types.js";
 
 export class UserPreferencesService {
   constructor(private supabase: SupabaseClient<Database>) {}

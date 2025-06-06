@@ -1,13 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
 import type {
-  ShelfDTO,
-  ShelfWithItemsDTO,
   CreateShelfCommandDTO,
   CreateShelfEntity,
+  DeleteResponseDTO,
+  ShelfDTO,
+  ShelfWithItemsDTO,
   UpdateShelfCommandDTO,
   UpdateShelfEntity,
-  DeleteResponseDTO,
 } from "../../types.js";
 
 export class ShelfService {

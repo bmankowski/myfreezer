@@ -1,20 +1,17 @@
-import { useState, useCallback } from "react";
-import { Plus, Search, MoreHorizontal, MessageSquare, Send, User, LogOut } from "lucide-react";
+import { useCallback, useState } from "react";
+import { LogOut, MessageSquare, Plus, Search, Send, User } from "lucide-react";
 
-import type {
-  CreateContainerCommandDTO,
-  CommandProcessDTO,
-} from "@/types";
+import type { CreateContainerCommandDTO } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -49,7 +46,7 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
       if (response.ok) {
         console.log("✅ Logout successful");
         onToast("Logout successful", "success");
-        
+
         // Small delay to show success message before redirect
         setTimeout(() => {
           window.location.href = "/login";
@@ -62,7 +59,7 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
       console.error("❌ Logout error:", error);
       const errorMessage = error instanceof Error ? error.message : "Logout failed";
       onToast(errorMessage, "error");
-      
+
       // Even if logout fails, redirect to login for security
       setTimeout(() => {
         window.location.href = "/login";
@@ -92,7 +89,7 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
     if (!commandInput.trim() || isProcessingCommand) return;
 
     setIsProcessingCommand(true);
-    
+
     try {
       const response = await fetch("/api/ai/process-command", {
         method: "POST",
@@ -103,7 +100,7 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
         body: JSON.stringify({ command: commandInput }),
       });
 
-      const result = await response.json();
+      await response.json();
 
       if (response.ok) {
         onToast("Command processed successfully", "success");
@@ -128,7 +125,7 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold text-gray-900">My Freezer</h1>
-          
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -224,10 +221,7 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={logout}
-                disabled={isLoggingOut}
-              >
+              <DropdownMenuItem onClick={logout} disabled={isLoggingOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 {isLoggingOut ? "Logging out..." : "Logout"}
               </DropdownMenuItem>

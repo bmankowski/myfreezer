@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MoreVertical, Plus, Trash2, Edit } from "lucide-react";
+import { Edit, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,11 +12,11 @@ import { ShelfList } from "./ShelfList";
 import { EditContainerModal } from "./modals/EditContainerModal";
 import { AddShelfModal } from "./modals/AddShelfModal";
 import type {
-  ContainerDetailsDTO,
-  UpdateContainerCommandDTO,
-  CreateShelfCommandDTO,
-  UpdateShelfCommandDTO,
   AddItemCommandDTO,
+  ContainerDetailsDTO,
+  CreateShelfCommandDTO,
+  UpdateContainerCommandDTO,
+  UpdateShelfCommandDTO,
   UserPreferencesDTO,
 } from "@/types";
 import type { Toast } from "@/lib/hooks/useToasts";

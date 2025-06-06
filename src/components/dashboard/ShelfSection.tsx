@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Trash2, Edit, MoreHorizontal, Star } from "lucide-react";
+import { Edit, MoreHorizontal, Plus, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
 import { ItemList } from "./ItemList";
 import { EditShelfModal } from "./modals/EditShelfModal";
 import { AddItemModal } from "./modals/AddItemModal";
-import type { ShelfWithItemsDTO, UpdateShelfCommandDTO, AddItemCommandDTO } from "@/types";
+import type { AddItemCommandDTO, ShelfWithItemsDTO, UpdateShelfCommandDTO } from "@/types";
 import type { Toast } from "@/lib/hooks/useToasts";
 
 interface ShelfSectionProps {

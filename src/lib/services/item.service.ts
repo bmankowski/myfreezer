@@ -1,18 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types.js";
 import type {
-  ItemDTO,
   AddItemCommandDTO,
-  ItemActionResponseDTO,
   CreateItemEntity,
-  UpdateItemQuantityCommandDTO,
   DeleteResponseDTO,
+  ItemActionResponseDTO,
+  ItemDTO,
+  ItemSearchParams,
   ItemSearchResponseDTO,
   ItemWithLocationDTO,
-  ItemSearchParams,
+  MoveItemCommandDTO,
   RemoveItemQuantityCommandDTO,
   RemoveItemQuantityResponseDTO,
-  MoveItemCommandDTO,
+  UpdateItemQuantityCommandDTO,
 } from "../../types.js";
 
 export class ItemService {

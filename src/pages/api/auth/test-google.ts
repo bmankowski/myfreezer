@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
-import { createSuccessResponse, createErrorResponse } from "../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
 
 // GET /api/auth/test-google - Test Google OAuth configuration
 export const GET: APIRoute = async ({ request }) => {
@@ -19,7 +19,7 @@ export const GET: APIRoute = async ({ request }) => {
     console.log("Environment check:", {
       hasGoogleClientId,
       hasGoogleClientSecret,
-      supabaseUrl: supabaseUrl?.substring(0, 30) + "..."
+      supabaseUrl: supabaseUrl?.substring(0, 30) + "...",
     });
 
     // Try to initiate OAuth to see what error we get
@@ -45,6 +45,6 @@ export const GET: APIRoute = async ({ request }) => {
     });
   } catch (error) {
     console.error("Test endpoint error:", error);
-    return createErrorResponse(500, `Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createErrorResponse(500, `Test failed: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
-}; 
+};

@@ -1,26 +1,26 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../../db/database.types.js";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../db/database.types";
 import type {
-  RegisterCommandDTO,
-  RegisterResponseDTO,
+  ChangePasswordCommandDTO,
+  ChangePasswordResponseDTO,
   LoginCommandDTO,
   LoginResponseDTO,
   LogoutResponseDTO,
-  ResetPasswordRequestCommandDTO,
-  ResetPasswordRequestResponseDTO,
-  ResetPasswordConfirmCommandDTO,
-  ResetPasswordConfirmResponseDTO,
-  ChangePasswordCommandDTO,
-  ChangePasswordResponseDTO,
-  UpdateProfileCommandDTO,
-  UpdateProfileResponseDTO,
-  VerifyEmailCommandDTO,
-  VerifyEmailResponseDTO,
   RefreshTokenCommandDTO,
   RefreshTokenResponseDTO,
+  RegisterCommandDTO,
+  RegisterResponseDTO,
   ResendVerificationCommandDTO,
   ResendVerificationResponseDTO,
+  ResetPasswordConfirmCommandDTO,
+  ResetPasswordConfirmResponseDTO,
+  ResetPasswordRequestCommandDTO,
+  ResetPasswordRequestResponseDTO,
+  UpdateProfileCommandDTO,
+  UpdateProfileResponseDTO,
   UserProfileDTO,
+  VerifyEmailCommandDTO,
+  VerifyEmailResponseDTO,
 } from "../../types.js";
 
 export class AuthService {
@@ -30,7 +30,7 @@ export class AuthService {
    * Register a new user with email and password
    * Returns session data for cookie setting if user is auto-confirmed
    */
-  async register(command: RegisterCommandDTO): Promise<RegisterResponseDTO & { session?: any }> {
+  async register(command: RegisterCommandDTO): Promise<RegisterResponseDTO & { session?: Session }> {
     try {
       const { data, error } = await this.supabase.auth.signUp({
         email: command.email,
@@ -73,7 +73,7 @@ export class AuthService {
    * Sign in user with email and password
    * Returns session data for cookie setting in API route
    */
-  async login(command: LoginCommandDTO): Promise<LoginResponseDTO & { session: any }> {
+  async login(command: LoginCommandDTO): Promise<LoginResponseDTO & { session: Session }> {
     try {
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email: command.email,

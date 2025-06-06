@@ -26,10 +26,10 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
 
     // Exchange code for session - this should work with the PKCE flow
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (exchangeError) {
       console.error("Code exchange error:", exchangeError);
-      console.log("Available cookies:", request.headers.get('cookie'));
+      console.log("Available cookies:", request.headers.get("cookie"));
       return redirect("/login?error=oauth_failed&reason=code_exchange");
     }
 
@@ -41,20 +41,20 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     console.log("✅ OAuth successful for user:", data.user.email);
 
     // Set session cookies using Astro's cookie API for better reliability
-    cookies.set('sb-access-token', data.session.access_token, {
+    cookies.set("sb-access-token", data.session.access_token, {
       httpOnly: true,
       secure: import.meta.env.PROD,
-      sameSite: 'lax',
+      sameSite: "lax",
       maxAge: 60 * 60, // 1 hour
-      path: '/'
+      path: "/",
     });
 
-    cookies.set('sb-refresh-token', data.session.refresh_token, {
+    cookies.set("sb-refresh-token", data.session.refresh_token, {
       httpOnly: true,
       secure: import.meta.env.PROD,
-      sameSite: 'lax',
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: '/'
+      path: "/",
     });
 
     console.log("🍪 Session cookies set via Astro cookies API, redirecting to index");
@@ -64,4 +64,4 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     console.error("OAuth callback processing error:", error);
     return redirect("/login?error=oauth_failed&reason=processing_error");
   }
-}; 
+};

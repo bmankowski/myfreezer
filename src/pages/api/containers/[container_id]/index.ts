@@ -1,13 +1,13 @@
 import type { APIRoute } from "astro";
 import type { UpdateContainerCommandDTO } from "../../../../types.js";
 import { ContainerService } from "../../../../lib/services/container.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../../lib/auth/supabase-server.js";
 import {
-  isValidUUID,
   isNonEmptyString,
-  isValidLength,
   isValidContainerType,
+  isValidLength,
+  isValidUUID,
 } from "../../../../lib/validation.utils.js";
 
 // GET /api/containers/{container_id} - Get container details

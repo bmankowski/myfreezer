@@ -1,15 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type {
+  AddItemCommandDTO,
   ContainerDetailsDTO,
-  ItemWithLocationDTO,
-  UpdateContainerCommandDTO,
   CreateContainerCommandDTO,
   CreateShelfCommandDTO,
-  UpdateShelfCommandDTO,
-  AddItemCommandDTO,
-  UpdateItemQuantityCommandDTO,
-  RemoveItemQuantityCommandDTO,
+  ItemWithLocationDTO,
   MoveItemCommandDTO,
+  RemoveItemQuantityCommandDTO,
+  UpdateContainerCommandDTO,
+  UpdateItemQuantityCommandDTO,
+  UpdateShelfCommandDTO,
 } from "@/types";
 
 interface DashboardState {
@@ -57,7 +57,7 @@ export function useDashboard() {
         return false;
       }
     } catch (error) {
-      console.error("Error checking authentication:", error);
+      console.log("Authentication check failed:", error);
       setState((prev) => ({ ...prev, isAuthenticated: false }));
       return false;
     }

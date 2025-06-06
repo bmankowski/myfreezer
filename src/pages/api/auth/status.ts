@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
-import { createSuccessResponse, createErrorResponse } from "../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
 
 // GET /api/auth/status - Check current authentication status
 export const GET: APIRoute = async ({ request }) => {
@@ -8,7 +8,10 @@ export const GET: APIRoute = async ({ request }) => {
     console.log("🔍 Checking authentication status");
 
     const supabase = createSupabaseServerClient(request);
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error) {
       console.log("❌ Auth status check error:", error.message);
@@ -55,4 +58,4 @@ export const GET: APIRoute = async ({ request }) => {
     console.error("Auth status endpoint error:", error);
     return createErrorResponse(500, "Failed to check authentication status");
   }
-}; 
+};

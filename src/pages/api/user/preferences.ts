@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import type { SetDefaultShelfCommandDTO } from "../../../types.js";
 import { UserPreferencesService } from "../../../lib/services/user-preferences.service.js";
-import { validateAuthToken, createErrorResponse, createSuccessResponse } from "../../../lib/auth.utils.js";
+import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 import { isValidUUID } from "../../../lib/validation.utils.js";
 

@@ -1,11 +1,28 @@
 import { createServerClient } from "@supabase/ssr";
-import type { Database } from "../db/database.types.js";
+import type { Database } from "../db/database.types";
+
+interface CookieOptions {
+  maxAge?: number;
+  expires?: Date;
+  path?: string;
+  domain?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: "strict" | "lax" | "none";
+}
 
 export function createSupabaseServerClient(request: Request, responseHeaders?: Headers) {
   // Create a headers object to collect cookies that need to be set
-  const cookiesToSet = new Map<string, { value: string; options: any }>();
+  const cookiesToSet = new Map<string, { value: string; options: CookieOptions }>();
 
-  return createServerClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL!, import.meta.env.PUBLIC_SUPABASE_ANON_KEY!, {
+  if (!import.meta.env.PUBLIC_SUPABASE_URL) {
+    throw new Error("PUBLIC_SUPABASE_URL is required");
+  }
+  if (!import.meta.env.PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error("PUBLIC_SUPABASE_ANON_KEY is required");
+  }
+
+  return createServerClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
       get(name: string) {
         const cookieHeader = request.headers.get("cookie");
@@ -24,7 +41,7 @@ export function createSupabaseServerClient(request: Request, responseHeaders?: H
         }
         return cookies[name];
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: CookieOptions) {
         console.log("🍪 Set cookie called:", name, "options:", options);
 
         // Store cookie info for later setting in response
@@ -36,7 +53,7 @@ export function createSupabaseServerClient(request: Request, responseHeaders?: H
           responseHeaders.append("Set-Cookie", cookieString);
         }
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: CookieOptions) {
         console.log("🍪 Remove cookie called:", name, "options:", options);
 
         // Set cookie to empty with past expiration
@@ -53,7 +70,7 @@ export function createSupabaseServerClient(request: Request, responseHeaders?: H
 }
 
 // Helper function to serialize cookies
-function serializeCookie(name: string, value: string, options: any): string {
+function serializeCookie(name: string, value: string, options: CookieOptions): string {
   let cookie = `${name}=${encodeURIComponent(value)}`;
 
   if (options.maxAge !== undefined) {
@@ -87,8 +104,21 @@ function serializeCookie(name: string, value: string, options: any): string {
   return cookie;
 }
 
-export function createSupabaseServerClientWithCookies(request: Request, astroContext?: { cookies: any }) {
-  return createServerClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL!, import.meta.env.PUBLIC_SUPABASE_ANON_KEY!, {
+interface AstroCookies {
+  get(name: string): { value: string } | undefined;
+  set(name: string, value: string, options?: CookieOptions): void;
+  delete(name: string, options?: CookieOptions): void;
+}
+
+export function createSupabaseServerClientWithCookies(request: Request, astroContext?: { cookies: AstroCookies }) {
+  if (!import.meta.env.PUBLIC_SUPABASE_URL) {
+    throw new Error("PUBLIC_SUPABASE_URL is required");
+  }
+  if (!import.meta.env.PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error("PUBLIC_SUPABASE_ANON_KEY is required");
+  }
+
+  return createServerClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
       get(name: string) {
         if (astroContext?.cookies) {
@@ -96,7 +126,7 @@ export function createSupabaseServerClientWithCookies(request: Request, astroCon
           console.log("🍪 Getting cookie via Astro:", name, "->", value ? "found" : "not found");
           return value;
         }
-        
+
         // Fallback to manual parsing
         const cookieHeader = request.headers.get("cookie");
         if (!cookieHeader) return undefined;
@@ -111,13 +141,13 @@ export function createSupabaseServerClientWithCookies(request: Request, astroCon
         console.log("🍪 Getting cookie manually:", name, "->", cookies[name] ? "found" : "not found");
         return cookies[name];
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: CookieOptions) {
         console.log("🍪 Set cookie called:", name, "options:", options);
         if (astroContext?.cookies) {
           astroContext.cookies.set(name, value, options);
         }
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: CookieOptions) {
         console.log("🍪 Remove cookie called:", name, "options:", options);
         if (astroContext?.cookies) {
           astroContext.cookies.delete(name, options);
@@ -128,15 +158,22 @@ export function createSupabaseServerClientWithCookies(request: Request, astroCon
 }
 
 export function createSupabaseAdminClient() {
-  return createServerClient<Database>(
-    import.meta.env.PUBLIC_SUPABASE_URL!,
-    import.meta.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: {
-        get: () => undefined,
-        set: () => {},
-        remove: () => {},
+  if (!import.meta.env.PUBLIC_SUPABASE_URL) {
+    throw new Error("PUBLIC_SUPABASE_URL is required");
+  }
+  if (!import.meta.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required");
+  }
+
+  return createServerClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.SUPABASE_SERVICE_ROLE_KEY, {
+    cookies: {
+      get: () => undefined,
+      set: () => {
+        // No-op for admin client
       },
-    }
-  );
+      remove: () => {
+        // No-op for admin client
+      },
+    },
+  });
 }

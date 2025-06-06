@@ -1,5 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../db/database.types.js";
 import { createSupabaseServerClient } from "./auth/supabase-server.js";
 
 export interface AuthResult {
@@ -13,10 +11,13 @@ export interface AuthResult {
  */
 export async function validateAuthToken(request: Request): Promise<AuthResult> {
   try {
-    console.log("🔍 Cookie header:", request.headers.get('cookie'));
-    
+    console.log("🔍 Cookie header:", request.headers.get("cookie"));
+
     const supabase = createSupabaseServerClient(request);
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     console.log("🔍 Supabase getUser result - user:", user?.id, "error:", error?.message);
 

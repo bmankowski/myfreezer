@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import type { UserPreferencesDTO, SetDefaultShelfCommandDTO } from "@/types";
+import { useCallback, useEffect, useState } from "react";
+import type { SetDefaultShelfCommandDTO, UserPreferencesDTO } from "@/types";
 
 export interface UseUserPreferencesReturn {
   preferences: UserPreferencesDTO | null;
@@ -29,26 +29,29 @@ export function useUserPreferences(): UseUserPreferencesReturn {
         return false;
       }
     } catch (error) {
-      console.error("Error checking authentication:", error);
+      console.log("Authentication check failed:", error);
       return false;
     }
   }, []);
 
-  const makeAuthenticatedRequest = useCallback(async (url: string, options: RequestInit = {}) => {
-    const isAuth = await checkAuthentication();
-    if (!isAuth) {
-      throw new Error("Not authenticated");
-    }
+  const makeAuthenticatedRequest = useCallback(
+    async (url: string, options: RequestInit = {}) => {
+      const isAuth = await checkAuthentication();
+      if (!isAuth) {
+        throw new Error("Not authenticated");
+      }
 
-    return fetch(url, {
-      ...options,
-      credentials: "include", // Include cookies
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-  }, [checkAuthentication]);
+      return fetch(url, {
+        ...options,
+        credentials: "include", // Include cookies
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+    },
+    [checkAuthentication]
+  );
 
   const fetchPreferences = useCallback(async () => {
     try {

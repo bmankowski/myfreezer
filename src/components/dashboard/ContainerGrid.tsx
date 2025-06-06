@@ -1,12 +1,12 @@
 import React from "react";
 import { ContainerCard } from "./ContainerCard";
 import type {
-  ContainerDetailsDTO,
-  UpdateContainerCommandDTO,
-  CreateShelfCommandDTO,
-  UpdateShelfCommandDTO,
   AddItemCommandDTO,
+  ContainerDetailsDTO,
+  CreateShelfCommandDTO,
   ItemWithLocationDTO,
+  UpdateContainerCommandDTO,
+  UpdateShelfCommandDTO,
   UserPreferencesDTO,
 } from "@/types";
 import type { Toast } from "@/lib/hooks/useToasts";

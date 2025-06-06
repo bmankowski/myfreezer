@@ -1,6 +1,6 @@
 import React from "react";
 import { ShelfSection } from "./ShelfSection";
-import type { ShelfWithItemsDTO, UpdateShelfCommandDTO, AddItemCommandDTO, UserPreferencesDTO } from "@/types";
+import type { AddItemCommandDTO, ShelfWithItemsDTO, UpdateShelfCommandDTO, UserPreferencesDTO } from "@/types";
 import type { Toast } from "@/lib/hooks/useToasts";
 
 interface ShelfListProps {

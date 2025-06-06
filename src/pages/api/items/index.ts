@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import type { ItemSearchParams } from "../../../types.js";
 import { ItemService } from "../../../lib/services/item.service.js";
 import { createErrorResponse, createSuccessResponse, validateAuthToken } from "../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
@@ -24,5 +23,3 @@ export const GET: APIRoute = async ({ request }) => {
     return createErrorResponse(500, "Internal server error");
   }
 };
-
-
