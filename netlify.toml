@@ -11,3 +11,5 @@
 [build.environment]
   # Enable Node.js 18 for better compatibility
   NODE_VERSION = "18"
+  # Set the site URL for OAuth callbacks
+  SITE_URL = "https://myfreezer.netlify.app"

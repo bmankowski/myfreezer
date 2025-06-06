@@ -6,10 +6,19 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   try {
     // Get the current URL to determine the correct callback URL
     const url = new URL(request.url);
-    const origin = url.origin;
+
+    // Prioritize configured site URL over dynamic URL detection
+    // This ensures consistent callback URLs in different environments
+    const siteUrl = import.meta.env.SITE_URL || import.meta.env.PUBLIC_SITE_URL;
+    const origin = siteUrl || url.origin;
     const callbackUrl = `${origin}/api/auth/callback`;
 
     console.log("🔗 Initiating Google OAuth with callback:", callbackUrl);
+    console.log("🌐 Origin sources:", {
+      siteUrl,
+      requestOrigin: url.origin,
+      finalOrigin: origin,
+    });
 
     // Create Supabase server client with Astro cookies integration
     const supabase = createSupabaseServerClientWithCookies(request, { cookies });

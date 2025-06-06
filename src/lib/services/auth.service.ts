@@ -138,7 +138,7 @@ export class AuthService {
   async requestPasswordReset(command: ResetPasswordRequestCommandDTO): Promise<ResetPasswordRequestResponseDTO> {
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(command.email, {
-        redirectTo: `${process.env.SITE_URL || "http://localhost:3000"}/auth/reset-password`,
+        redirectTo: `${import.meta.env.SITE_URL || "http://localhost:3000"}/auth/reset-password`,
       });
 
       if (error) {
