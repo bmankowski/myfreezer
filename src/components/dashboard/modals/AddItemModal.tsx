@@ -53,24 +53,24 @@ export function AddItemModal({ isOpen, onClose, shelfName, onAdd }: AddItemModal
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Item to {shelfName}</DialogTitle>
+          <DialogTitle>Dodaj przedmiot do {shelfName}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Item Name</Label>
+            <Label htmlFor="name">Nazwa przedmiotu</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g., Chicken breast, Ice cream"
+              placeholder="np. masło, mleko, jajka"
               required
               disabled={isSubmitting}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity</Label>
+            <Label htmlFor="quantity">Liczba</Label>
             <Input
               id="quantity"
               type="number"
@@ -83,10 +83,10 @@ export function AddItemModal({ isOpen, onClose, shelfName, onAdd }: AddItemModal
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
-              Cancel
+              Anuluj
             </Button>
             <Button type="submit" disabled={isSubmitting || !formData.name.trim() || formData.quantity <= 0}>
-              {isSubmitting ? "Adding..." : "Add Item"}
+              {isSubmitting ? "Dodawanie..." : "Dodaj"}
             </Button>
           </div>
         </form>

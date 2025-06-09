@@ -38,7 +38,7 @@ export function ItemRow({ item, searchQuery, onQuantityUpdate, onDelete, onToast
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${item.name}?`) || !onDelete) {
+    if (!onDelete) {
       return;
     }
 

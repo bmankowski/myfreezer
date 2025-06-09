@@ -53,7 +53,7 @@ export function CommandInput({ onToast }: CommandInputProps) {
       </div>
       <Input
         type="text"
-        placeholder="Add command... (e.g., 'dodaj 2 mleka na pierwszą półkę')"
+        placeholder="Wpisz polecenie... (np. 'dodaj 2 mleka na pierwszą półkę')"
         value={commandInput}
         onChange={(e) => setCommandInput(e.target.value)}
         disabled={isProcessingCommand}

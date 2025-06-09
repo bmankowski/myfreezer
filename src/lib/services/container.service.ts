@@ -309,7 +309,7 @@ export class ContainerService {
     }
 
     if (shelves && shelves.length > 0) {
-      throw new Error("Container must be empty before deletion");
+      throw new Error("Cannot delete container that contains shelves. Please delete all shelves first.");
     }
 
     // Delete the container

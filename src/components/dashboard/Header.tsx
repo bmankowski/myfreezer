@@ -87,13 +87,14 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-gray-900">My Freezer</h1>
-
+          <a href="/" className="text-2xl font-bold text-gray-900">
+            My Freezer
+          </a>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               type="text"
-              placeholder="Search items..."
+              placeholder="Wyszukaj..."
               value={searchQuery}
               onChange={(e) => onSearch(e.target.value)}
               className="pl-10 w-80"
@@ -111,16 +112,16 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
             <DialogTrigger asChild>
               <Button size="sm" className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Add Container
+                Dodaj lodówkę lub zamrażarkę
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Add New Container</DialogTitle>
+                <DialogTitle>Dodaj nową lodówkę lub zamrażarkę</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Nazwa</Label>
                   <Input
                     id="name"
                     value={name}
@@ -135,8 +136,8 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="freezer">❄️ Freezer</SelectItem>
-                      <SelectItem value="fridge">🧊 Fridge</SelectItem>
+                      <SelectItem value="freezer">❄️ Zamrażarka</SelectItem>
+                      <SelectItem value="fridge">🧊 Lodówka</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

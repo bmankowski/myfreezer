@@ -121,7 +121,6 @@ export function useDashboard() {
   // Initial authentication check and data loading
   useEffect(() => {
     const initializeData = async () => {
-      console.log("🏠 Dashboard initializing...");
       const isAuth = await checkAuth();
 
       if (isAuth) {
@@ -133,16 +132,6 @@ export function useDashboard() {
 
     initializeData();
   }, [checkAuth, refreshContainers]);
-
-  // Log state changes for debugging
-  useEffect(() => {
-    console.log("🏠 Dashboard state:", {
-      isAuthenticated: state.isAuthenticated,
-      isLoading: state.isLoading,
-      containersCount: state.containers.length,
-      defaultShelf: state.containers[0]?.shelves?.[0]?.shelf_id,
-    });
-  }, [state.isAuthenticated, state.isLoading, state.containers]);
 
   const searchItems = useCallback(
     async (query: string) => {
@@ -233,7 +222,10 @@ export function useDashboard() {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to delete container: ${response.status}`);
+          // Try to extract error message from response
+          const errorData = await response.json().catch(() => ({ error: "Failed to delete container" }));
+          const errorMessage = errorData.error || `Failed to delete container: ${response.status}`;
+          throw new Error(errorMessage);
         }
 
         await refreshContainers();

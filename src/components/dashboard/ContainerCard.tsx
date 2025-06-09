@@ -55,16 +55,16 @@ export function ContainerCard({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddShelfModalOpen, setIsAddShelfModalOpen] = useState(false);
 
-  const isEmpty = container.total_items === 0;
+  const hasNoShelves = container.shelves.length === 0;
   const containerTypeIcon = container.type === "freezer" ? "❄️" : "🧊";
   const containerTypeColor = container.type === "freezer" ? "text-blue-600" : "text-cyan-600";
 
   const handleDelete = () => {
-    if (!isEmpty) {
+    if (!hasNoShelves) {
       onToast({
         type: "error",
         title: "Cannot delete container",
-        description: "Container must be empty before deletion",
+        description: "Container contains shelves. Please delete all shelves first.",
       });
       return;
     }
@@ -117,25 +117,20 @@ export function ContainerCard({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit
+                  Edytuj
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDelete} disabled={!isEmpty} className="text-red-600">
+                <DropdownMenuItem onClick={handleDelete} disabled={!hasNoShelves} className="text-red-600">
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  Usuń
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>{container.shelves.length} shelves</span>
-            <span>{container.total_items} items</span>
           </div>
         </CardHeader>
 
         <CardContent className="pt-0">
           <ShelfList
             shelves={container.shelves}
-            containerId={container.container_id}
             searchQuery={searchQuery}
             userPreferences={userPreferences}
             onShelfUpdate={onShelfUpdate}
@@ -149,7 +144,7 @@ export function ContainerCard({
 
           <Button variant="outline" size="sm" onClick={() => setIsAddShelfModalOpen(true)} className="w-full mt-4">
             <Plus className="mr-2 h-4 w-4" />
-            Add Shelf
+            Dodaj półkę
           </Button>
         </CardContent>
       </Card>

@@ -183,7 +183,7 @@ export function ShelfSection({
                     disabled={isSettingDefault}
                   >
                     <Star className="mr-2 h-3 w-3" />
-                    {isSettingDefault ? "Setting..." : "Set as Default"}
+                    {isSettingDefault ? "Setting..." : "Ustaw jako domyślną"}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
@@ -193,7 +193,7 @@ export function ShelfSection({
                   }}
                 >
                   <Edit className="mr-2 h-3 w-3" />
-                  Edit
+                  Edytuj
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
@@ -204,7 +204,7 @@ export function ShelfSection({
                   className="text-red-600"
                 >
                   <Trash2 className="mr-2 h-3 w-3" />
-                  Delete
+                  Usuń
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -237,7 +237,7 @@ export function ShelfSection({
             className="w-full mt-2 h-8 text-xs"
           >
             <Plus className="mr-1 h-3 w-3" />
-            Add Item
+            Dodaj
           </Button>
         </div>
       </div>

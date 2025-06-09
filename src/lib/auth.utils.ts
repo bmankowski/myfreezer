@@ -11,15 +11,11 @@ export interface AuthResult {
  */
 export async function validateAuthToken(request: Request): Promise<AuthResult> {
   try {
-    console.log("🔍 Cookie header:", request.headers.get("cookie"));
-
     const supabase = createSupabaseServerClient(request);
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
-
-    console.log("🔍 Supabase getUser result - user:", user?.id, "error:", error?.message);
 
     if (error || !user) {
       console.log("🔒 Authentication failed:", error?.message || "No user found");
@@ -28,8 +24,6 @@ export async function validateAuthToken(request: Request): Promise<AuthResult> {
         error: error?.message || "Not authenticated",
       };
     }
-
-    console.log("✅ Authentication successful for user:", user.id);
     return {
       success: true,
       user_id: user.id,

@@ -35,7 +35,6 @@ export function createSupabaseServerClient(request: Request, astroContext?: { co
         // Prefer Astro cookies when available (most common case)
         if (astroContext?.cookies) {
           const value = astroContext.cookies.get(name)?.value;
-          console.log("🍪 Getting cookie via Astro:", name, "->", value ? "found" : "not found");
           return value;
         }
 
@@ -50,14 +49,9 @@ export function createSupabaseServerClient(request: Request, astroContext?: { co
           })
         );
 
-        // Only log main cookies and successful chunk finds
-        if (!name.includes(".") || cookies[name]) {
-          console.log("🍪 Getting cookie manually:", name, "->", cookies[name] ? "found" : "not found");
-        }
         return cookies[name];
       },
       set(name: string, value: string, options: CookieOptions) {
-        console.log("🍪 Set cookie called:", name, "options:", options);
 
         // Use Astro's cookie API when available (preferred)
         if (astroContext?.cookies) {
@@ -67,7 +61,6 @@ export function createSupabaseServerClient(request: Request, astroContext?: { co
         // This function doesn't directly set response headers
       },
       remove(name: string, options: CookieOptions) {
-        console.log("🍪 Remove cookie called:", name, "options:", options);
 
         // Use Astro's cookie API when available (preferred)
         if (astroContext?.cookies) {

@@ -34,14 +34,6 @@ export function Dashboard() {
   } = useDashboard();
   const { preferences, setDefaultShelf } = useUserPreferences();
   const { toasts, addToast, dismissToast } = useToasts();
-
-  console.log("🏠 Dashboard state:", {
-    isAuthenticated,
-    isLoading,
-    containersCount: containers.length,
-    defaultShelf: preferences?.default_shelf?.name,
-  });
-
   // Handle authentication redirect
   useEffect(() => {
     if (isAuthenticated === false) {

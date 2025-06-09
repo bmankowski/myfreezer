@@ -127,6 +127,9 @@ export const DELETE: APIRoute = async ({ request, params }) => {
       return createSuccessResponse(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      if (errorMessage.includes("Cannot delete container that contains shelves")) {
+        return createErrorResponse(400, errorMessage);
+      }
       if (errorMessage.includes("must be empty")) {
         return createErrorResponse(400, "Container must be empty before deletion");
       }

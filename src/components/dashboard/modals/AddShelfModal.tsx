@@ -61,12 +61,12 @@ export function AddShelfModal({ isOpen, onClose, existingPositions, onAdd }: Add
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Shelf</DialogTitle>
+          <DialogTitle>Dodaj nową półkę</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Shelf Name</Label>
+            <Label htmlFor="name">Nazwa półki</Label>
             <Input
               id="name"
               value={formData.name}
@@ -78,7 +78,7 @@ export function AddShelfModal({ isOpen, onClose, existingPositions, onAdd }: Add
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="position">Position</Label>
+            <Label htmlFor="position">Pozycja</Label>
             <Input
               id="position"
               type="number"
@@ -87,15 +87,15 @@ export function AddShelfModal({ isOpen, onClose, existingPositions, onAdd }: Add
               onChange={(e) => setFormData((prev) => ({ ...prev, position: parseInt(e.target.value) || 1 }))}
               disabled={isSubmitting}
             />
-            <p className="text-xs text-gray-500">Position determines the order of shelves (1 = top)</p>
+            <p className="text-xs text-gray-500">Pozycja określa kolejność półek (1 = górna)</p>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
-              Cancel
+              Anuluj
             </Button>
             <Button type="submit" disabled={isSubmitting || !formData.name.trim()}>
-              {isSubmitting ? "Adding..." : "Add Shelf"}
+              {isSubmitting ? "Dodawanie..." : "Dodaj"}
             </Button>
           </div>
         </form>
