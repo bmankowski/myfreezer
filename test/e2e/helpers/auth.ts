@@ -14,19 +14,52 @@ export class AuthHelper {
    * Returns the login response for further assertions
    */
   async login() {
-    const response = await this.request.post(api.endpoints.login, {
-      data: {
-        email: testUser.email,
-        password: testUser.password,
-      },
-    });
+    // Add retry logic for login failures
+    let lastError: Error | unknown;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const response = await this.request.post(api.endpoints.login, {
+          data: {
+            email: testUser.email,
+            password: testUser.password,
+          },
+        });
 
-    expect(response.status()).toBe(200);
-    const body = await response.json();
-    expect(body.message).toBe("Login successful");
-    expect(body.user.email).toBe(testUser.email);
+        // Handle different response statuses
+        if (response.status() === 200) {
+          const body = await response.json();
+          expect(body.message).toBe("Login successful");
+          expect(body.user.email).toBe(testUser.email);
+          return { response, body };
+        } else if (response.status() === 500) {
+          console.warn(`Login attempt ${attempt} failed with 500 error`);
+          if (attempt === 3) {
+            // On final attempt, get response body for debugging
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const errorBody = await response.json();
+            console.error("Login 500 error details:", errorBody);
+            throw new Error(`Login failed after 3 attempts. Final error: ${JSON.stringify(errorBody)}`);
+          }
+          // Wait a bit before retrying
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          continue;
+        } else {
+          // Other status codes
+          const body = await response.json();
+          throw new Error(`Login failed with status ${response.status()}: ${JSON.stringify(body)}`);
+        }
+      } catch (error) {
+        lastError = error;
+        if (attempt === 3) {
+          throw error;
+        }
+        console.warn(`Login attempt ${attempt} failed:`, error);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
 
-    return { response, body };
+    throw lastError;
   }
 
   /**

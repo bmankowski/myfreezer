@@ -22,8 +22,7 @@ export class ContainerService {
     const { data, error } = await this.supabase
       .from("containers")
       .select(
-        `
-        container_id,
+        `container_id,
         name,
         type,
         created_at,
