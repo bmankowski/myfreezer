@@ -84,75 +84,14 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <a href="/" className="text-2xl font-bold text-gray-900">
+    <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-4">
+      {/* Mobile Layout - Vertical Stack */}
+      <div className="sm:hidden space-y-3">
+        {/* Row 1: Title + User Menu */}
+        <div className="flex items-center justify-between">
+          <a href="/" className="text-xl font-bold text-gray-900">
             My Freezer
           </a>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              type="text"
-              placeholder="Wyszukaj..."
-              value={searchQuery}
-              onChange={(e) => onSearch(e.target.value)}
-              className="pl-10 w-80"
-              disabled={isSearching}
-            />
-          </div>
-
-          {/* Command Input */}
-          <CommandInput onToast={onToast} />
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {/* Add Container Button */}
-          <Dialog open={isContainerDialogOpen} onOpenChange={setIsContainerDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Dodaj lodówkę lub zamrażarkę
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Dodaj nową lodówkę lub zamrażarkę</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nazwa</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Container name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="type">Type</Label>
-                  <Select value={type} onValueChange={(value: "freezer" | "fridge") => setType(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="freezer">❄️ Zamrażarka</SelectItem>
-                      <SelectItem value="fridge">🧊 Lodówka</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setIsContainerDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleContainerCreate} disabled={!name.trim()}>
-                    Create
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
@@ -169,6 +108,146 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Row 2: Search Box */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            type="text"
+            placeholder="Wyszukaj..."
+            value={searchQuery}
+            onChange={(e) => onSearch(e.target.value)}
+            className="pl-10 w-full"
+            disabled={isSearching}
+          />
+        </div>
+
+        {/* Row 3: Command Input */}
+        <div className="w-full">
+          <CommandInput onToast={onToast} />
+        </div>
+
+        {/* Row 4: Add Container Button */}
+        <Dialog open={isContainerDialogOpen} onOpenChange={setIsContainerDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="w-full flex items-center justify-center gap-2">
+              <Plus className="h-4 w-4" />
+              Dodaj lodówkę lub zamrażarkę
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Dodaj nową lodówkę lub zamrażarkę</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nazwa</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Container name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <Select value={type} onValueChange={(value: "freezer" | "fridge") => setType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="freezer">❄️ Zamrażarka</SelectItem>
+                    <SelectItem value="fridge">🧊 Lodówka</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsContainerDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleContainerCreate} disabled={!name.trim()}>
+                  Create
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Desktop Layout - Horizontal */}
+      <div className="hidden sm:flex items-center space-x-4">
+        <a href="/" className="text-2xl font-bold text-gray-900 shrink-0">
+          My Freezer
+        </a>
+
+        <div className="relative shrink-0">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            type="text"
+            placeholder="Wyszukaj..."
+            value={searchQuery}
+            onChange={(e) => onSearch(e.target.value)}
+            className="pl-10 w-50"
+            disabled={isSearching}
+          />
+        </div>
+
+        {/* Command Input - expands to fill available space */}
+        <div className="flex-1 min-w-0">
+          <CommandInput onToast={onToast} />
+        </div>
+
+        {/* Add Container Button */}
+        <Dialog open={isContainerDialogOpen} onOpenChange={setIsContainerDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="flex items-center gap-2 shrink-0">
+              <Plus className="h-4 w-4" />
+              Dodaj lodówkę
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Dodaj nową lodówkę lub zamrażarkę</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nazwa</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Container name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <Select value={type} onValueChange={(value: "freezer" | "fridge") => setType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="freezer">❄️ Zamrażarka</SelectItem>
+                    <SelectItem value="fridge">🧊 Lodówka</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsContainerDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleContainerCreate} disabled={!name.trim()}>
+                  Create
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="shrink-0">
+              <User className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout} disabled={isLoggingOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              {isLoggingOut ? "Logging out..." : "Logout"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

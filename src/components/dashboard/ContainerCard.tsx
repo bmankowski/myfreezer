@@ -101,7 +101,7 @@ export function ContainerCard({
 
   return (
     <>
-      <Card className="h-fit">
+      <Card className="h-fit w-full">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

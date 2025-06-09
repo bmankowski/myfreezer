@@ -47,7 +47,7 @@ export function CommandInput({ onToast }: CommandInputProps) {
   };
 
   return (
-    <form onSubmit={handleCommandSubmit} className="flex-1 relative">
+    <form onSubmit={handleCommandSubmit} className="relative w-full sm:flex-1 sm:min-w-40 sm:max-w-md">
       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <MessageSquare className="h-5 w-5 text-gray-400" />
       </div>
@@ -57,7 +57,7 @@ export function CommandInput({ onToast }: CommandInputProps) {
         value={commandInput}
         onChange={(e) => setCommandInput(e.target.value)}
         disabled={isProcessingCommand}
-        className="pl-10 pr-12 w-96"
+        className="pl-10 pr-12 w-full"
       />
       <button
         type="submit"

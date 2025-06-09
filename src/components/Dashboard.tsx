@@ -166,7 +166,7 @@ export function Dashboard() {
           onToast={handleToast}
         />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="w-full sm:max-w-7xl sm:mx-auto px-3 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-64 w-full" />
@@ -187,7 +187,7 @@ export function Dashboard() {
         onToast={handleToast}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full sm:max-w-7xl sm:mx-auto px-3 sm:px-6 lg:px-8 py-8">
         <ContainerGrid
           containers={containers}
           searchQuery={searchQuery}
