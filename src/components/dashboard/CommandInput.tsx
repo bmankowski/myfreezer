@@ -72,4 +72,4 @@ export function CommandInput({ onToast }: CommandInputProps) {
       </button>
     </form>
   );
-} 
+}

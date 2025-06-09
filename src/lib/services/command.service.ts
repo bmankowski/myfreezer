@@ -330,11 +330,14 @@ export class CommandService {
       throw new Error("Shelf not found");
     }
 
+    // Get the container name for this shelf
+    const containerName = await this.shelfService.getContainerNameForShelf(originalShelfId);
+
     const details: CommandActionDetailsDTO = {
       item_name,
       quantity,
       shelf_name: shelf.name,
-      container_name: "Container", // We'd need to fetch container name if needed
+      container_name: containerName || "Nieznany kontener",
     };
 
     try {

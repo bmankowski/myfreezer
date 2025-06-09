@@ -32,7 +32,6 @@ interface ContainerCardProps {
   onShelfDelete: (shelfId: string) => void;
   onItemAdd: (shelfId: string, data: AddItemCommandDTO) => void;
   onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
-  onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
   onSetAsDefault?: (shelfId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, "id">) => void;
@@ -49,7 +48,6 @@ export function ContainerCard({
   onShelfDelete,
   onItemAdd,
   onItemQuantityUpdate,
-  onItemQuantityRemove,
   onItemDelete,
   onSetAsDefault,
   onToast,
@@ -144,7 +142,6 @@ export function ContainerCard({
             onShelfDelete={onShelfDelete}
             onItemAdd={onItemAdd}
             onItemQuantityUpdate={onItemQuantityUpdate}
-            onItemQuantityRemove={onItemQuantityRemove}
             onItemDelete={onItemDelete}
             onSetAsDefault={onSetAsDefault}
             onToast={onToast}

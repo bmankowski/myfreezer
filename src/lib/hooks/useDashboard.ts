@@ -340,7 +340,7 @@ export function useDashboard() {
     async (itemId: string, quantityData: UpdateItemQuantityCommandDTO | RemoveItemQuantityCommandDTO) => {
       try {
         const response = await makeAuthenticatedRequest(`/api/items/${itemId}/quantity`, {
-          method: "PUT",
+          method: "PATCH",
           body: JSON.stringify(quantityData),
         });
 
@@ -385,7 +385,7 @@ export function useDashboard() {
   const deleteItem = useCallback(
     async (itemId: string) => {
       try {
-        const response = await makeAuthenticatedRequest(`/api/items/${itemId}`, {
+        const response = await makeAuthenticatedRequest(`/api/items/${itemId}/remove`, {
           method: "DELETE",
         });
 

@@ -11,7 +11,6 @@ interface ShelfListProps {
   onShelfDelete: (shelfId: string) => void;
   onItemAdd: (shelfId: string, data: AddItemCommandDTO) => void;
   onItemQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
-  onItemQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onItemDelete?: (itemId: string) => Promise<void>;
   onSetAsDefault?: (shelfId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, "id">) => void;
@@ -25,7 +24,6 @@ export function ShelfList({
   onShelfDelete,
   onItemAdd,
   onItemQuantityUpdate,
-  onItemQuantityRemove,
   onItemDelete,
   onSetAsDefault,
   onToast,
@@ -54,7 +52,6 @@ export function ShelfList({
           onDelete={() => onShelfDelete(shelf.shelf_id)}
           onItemAdd={(data) => onItemAdd(shelf.shelf_id, data)}
           onItemQuantityUpdate={onItemQuantityUpdate}
-          onItemQuantityRemove={onItemQuantityRemove}
           onItemDelete={onItemDelete}
           onSetAsDefault={onSetAsDefault}
           onToast={onToast}

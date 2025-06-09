@@ -58,12 +58,14 @@ export class ContainerService {
           name: shelf.name,
           position: shelf.position,
           created_at: shelf.created_at,
-          items: (shelf.items || []).map((item) => ({
-            item_id: item.item_id,
-            name: item.name,
-            quantity: item.quantity,
-            created_at: item.created_at,
-          })),
+          items: (shelf.items || [])
+            .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+            .map((item) => ({
+              item_id: item.item_id,
+              name: item.name,
+              quantity: item.quantity,
+              created_at: item.created_at,
+            })),
         }));
 
       // Calculate total items
@@ -162,18 +164,20 @@ export class ContainerService {
       throw new Error(`Failed to fetch shelves: ${shelvesError.message}`);
     }
 
-    // Transform shelves data
+    // Transform shelves data with sorted items
     const shelfWithItems: ShelfWithItemsDTO[] = (shelves || []).map((shelf) => ({
       shelf_id: shelf.shelf_id,
       name: shelf.name,
       position: shelf.position,
       created_at: shelf.created_at,
-      items: (shelf.items || []).map((item) => ({
-        item_id: item.item_id,
-        name: item.name,
-        quantity: item.quantity,
-        created_at: item.created_at,
-      })),
+      items: (shelf.items || [])
+        .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+        .map((item) => ({
+          item_id: item.item_id,
+          name: item.name,
+          quantity: item.quantity,
+          created_at: item.created_at,
+        })),
     }));
 
     // Calculate total items
@@ -228,18 +232,20 @@ export class ContainerService {
       throw new Error(`Failed to fetch container contents: ${shelvesError.message}`);
     }
 
-    // Transform shelves data
+    // Transform shelves data with sorted items
     const shelfWithItems: ShelfWithItemsDTO[] = (shelves || []).map((shelf) => ({
       shelf_id: shelf.shelf_id,
       name: shelf.name,
       position: shelf.position,
       created_at: shelf.created_at,
-      items: (shelf.items || []).map((item) => ({
-        item_id: item.item_id,
-        name: item.name,
-        quantity: item.quantity,
-        created_at: item.created_at,
-      })),
+      items: (shelf.items || [])
+        .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+        .map((item) => ({
+          item_id: item.item_id,
+          name: item.name,
+          quantity: item.quantity,
+          created_at: item.created_at,
+        })),
     }));
 
     // Calculate total items

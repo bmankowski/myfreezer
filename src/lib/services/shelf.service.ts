@@ -154,4 +154,21 @@ export class ShelfService {
 
     return !error && !!data;
   }
+
+  /**
+   * Get the name of the container for a shelf
+   */
+  async getContainerNameForShelf(shelfId: string): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from("shelves")
+      .select("container_id, containers(name)")
+      .eq("shelf_id", shelfId)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to get container name for shelf: ${error.message}`);
+    }
+
+    return data?.containers?.name || null;
+  }
 }

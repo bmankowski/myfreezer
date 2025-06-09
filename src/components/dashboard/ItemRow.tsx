@@ -8,12 +8,11 @@ interface ItemRowProps {
   item: Pick<Item, "item_id" | "name" | "quantity" | "created_at">;
   searchQuery?: string;
   onQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
-  onQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onDelete?: (itemId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, "id">) => void;
 }
 
-export function ItemRow({ item, searchQuery, onQuantityUpdate, onQuantityRemove, onDelete, onToast }: ItemRowProps) {
+export function ItemRow({ item, searchQuery, onQuantityUpdate, onDelete, onToast }: ItemRowProps) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleQuantityUpdate = async (newQuantity: number) => {
@@ -32,28 +31,6 @@ export function ItemRow({ item, searchQuery, onQuantityUpdate, onQuantityRemove,
         type: "error",
         title: "Update failed",
         description: error instanceof Error ? error.message : "Failed to update quantity",
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleRemoveQuantity = async (removeAmount: number) => {
-    if (removeAmount <= 0 || removeAmount > item.quantity || !onQuantityRemove) return;
-
-    setIsUpdating(true);
-    try {
-      await onQuantityRemove(item.item_id, removeAmount);
-      onToast({
-        type: "success",
-        title: "Quantity reduced",
-        description: `${item.name} quantity reduced by ${removeAmount}`,
-      });
-    } catch (error) {
-      onToast({
-        type: "error",
-        title: "Remove failed",
-        description: error instanceof Error ? error.message : "Failed to remove quantity",
       });
     } finally {
       setIsUpdating(false);
@@ -113,7 +90,7 @@ export function ItemRow({ item, searchQuery, onQuantityUpdate, onQuantityRemove,
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleRemoveQuantity(1)}
+          onClick={() => handleQuantityUpdate(item.quantity - 1)}
           disabled={isUpdating || item.quantity <= 0}
           className="h-6 w-6 p-0"
         >

@@ -7,12 +7,11 @@ interface ItemListProps {
   items: Pick<Item, "item_id" | "name" | "quantity" | "created_at">[];
   searchQuery?: string;
   onQuantityUpdate?: (itemId: string, quantity: number) => Promise<void>;
-  onQuantityRemove?: (itemId: string, quantity: number) => Promise<void>;
   onDelete?: (itemId: string) => Promise<void>;
   onToast: (toast: Omit<Toast, "id">) => void;
 }
 
-export function ItemList({ items, searchQuery, onQuantityUpdate, onQuantityRemove, onDelete, onToast }: ItemListProps) {
+export function ItemList({ items, searchQuery, onQuantityUpdate, onDelete, onToast }: ItemListProps) {
   if (items.length === 0) {
     return (
       <div className="text-center py-3 text-gray-400">
@@ -29,7 +28,6 @@ export function ItemList({ items, searchQuery, onQuantityUpdate, onQuantityRemov
           item={item}
           searchQuery={searchQuery}
           onQuantityUpdate={onQuantityUpdate}
-          onQuantityRemove={onQuantityRemove}
           onDelete={onDelete}
           onToast={onToast}
         />

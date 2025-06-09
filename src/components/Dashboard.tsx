@@ -105,40 +105,21 @@ export function Dashboard() {
     }
   };
 
-  const handleItemQuantityUpdate = async (itemId: string, quantity: number) => {
+  const handleItemQuantityUpdate = async (itemId: string, newQuantity: number) => {
     try {
-      const result = await updateItemQuantity(itemId, { quantity });
+      const result = await updateItemQuantity(itemId, { quantity: newQuantity });
       if (result) {
-        addToast({
-          type: "success",
-          title: "Item updated",
-          description: `Quantity updated successfully`,
-        });
+        // addToast({
+        //   type: "success",
+        //   title: "Item updated",
+        //   description: `Quantity updated successfully`,
+        // });
       }
     } catch (error) {
       addToast({
         type: "error",
         title: "Update failed",
         description: error instanceof Error ? error.message : "Failed to update item",
-      });
-    }
-  };
-
-  const handleItemQuantityRemove = async (itemId: string, quantity: number) => {
-    try {
-      const result = await updateItemQuantity(itemId, { quantity: -quantity });
-      if (result) {
-        addToast({
-          type: "success",
-          title: "Item updated",
-          description: `Quantity reduced successfully`,
-        });
-      }
-    } catch (error) {
-      addToast({
-        type: "error",
-        title: "Remove failed",
-        description: error instanceof Error ? error.message : "Failed to remove quantity",
       });
     }
   };
@@ -228,7 +209,6 @@ export function Dashboard() {
           onShelfDelete={deleteShelf}
           onItemAdd={handleItemAdd}
           onItemQuantityUpdate={handleItemQuantityUpdate}
-          onItemQuantityRemove={handleItemQuantityRemove}
           onItemDelete={handleItemDelete}
           onSetAsDefault={handleSetAsDefault}
           onToast={addToast}

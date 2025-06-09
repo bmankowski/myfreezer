@@ -16,7 +16,7 @@ import type {
 } from "../../types.js";
 
 export class ItemService {
-  constructor(private supabase: SupabaseClient<Database>) {}
+  constructor(private supabase: SupabaseClient<Database, string, any>) {}
 
   /**
    * Search items with location information and pagination
