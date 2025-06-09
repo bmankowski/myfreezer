@@ -168,6 +168,21 @@ export function useDashboard() {
     [makeAuthenticatedRequest]
   );
 
+  const handleSearchQuery = useCallback(
+    (query: string) => {
+      // Update search query in state
+      setState((prev) => ({ ...prev, searchQuery: query }));
+
+      // Perform search immediately (debouncing is handled in the Header component)
+      if (query.trim()) {
+        searchItems(query);
+      } else {
+        setState((prev) => ({ ...prev, searchResults: [], isSearching: false }));
+      }
+    },
+    [searchItems]
+  );
+
   const updateContainer = useCallback(
     async (containerId: string, updates: UpdateContainerCommandDTO) => {
       try {
@@ -393,18 +408,6 @@ export function useDashboard() {
       }
     },
     [makeAuthenticatedRequest, refreshContainers]
-  );
-
-  const handleSearchQuery = useCallback(
-    (query: string) => {
-      setState((prev) => ({ ...prev, searchQuery: query }));
-      if (query.trim()) {
-        searchItems(query);
-      } else {
-        setState((prev) => ({ ...prev, searchResults: [], isSearching: false }));
-      }
-    },
-    [searchItems]
   );
 
   const clearError = useCallback(() => {

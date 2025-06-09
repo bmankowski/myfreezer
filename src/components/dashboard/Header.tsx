@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { LogOut, Plus, Search, User } from "lucide-react";
 
 import type { CreateContainerCommandDTO } from "@/types";
@@ -20,17 +20,51 @@ import { CommandInput } from "./CommandInput";
 
 interface HeaderProps {
   onSearch: (query: string) => void;
-  isSearching: boolean;
-  searchQuery: string;
   onContainerCreate: (data: CreateContainerCommandDTO) => Promise<void>;
   onToast: (message: string, type?: "success" | "error") => void;
 }
 
-export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, onToast }: HeaderProps) {
+export function Header({ onSearch, onContainerCreate, onToast }: HeaderProps) {
   const [isContainerDialogOpen, setIsContainerDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState<"freezer" | "fridge">("freezer");
+
+  // Use uncontrolled inputs with refs to prevent focus loss
+  const mobileSearchRef = useRef<HTMLInputElement>(null);
+  const desktopSearchRef = useRef<HTMLInputElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearchInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+
+      // Clear existing timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+
+      if (value.trim()) {
+        // Debounce the search call
+        searchTimeoutRef.current = setTimeout(() => {
+          onSearch(value);
+        }, 300);
+      } else {
+        // Clear search immediately when empty
+        onSearch("");
+      }
+    },
+    [onSearch]
+  );
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -113,12 +147,12 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
+            ref={mobileSearchRef}
             type="text"
             placeholder="Wyszukaj..."
-            value={searchQuery}
-            onChange={(e) => onSearch(e.target.value)}
+            onChange={handleSearchInput}
             className="pl-10 w-full"
-            disabled={isSearching}
+            autoComplete="off"
           />
         </div>
 
@@ -178,12 +212,12 @@ export function Header({ onSearch, isSearching, searchQuery, onContainerCreate, 
         <div className="relative shrink-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
+            ref={desktopSearchRef}
             type="text"
             placeholder="Wyszukaj..."
-            value={searchQuery}
-            onChange={(e) => onSearch(e.target.value)}
+            onChange={handleSearchInput}
             className="pl-10 w-50"
-            disabled={isSearching}
+            autoComplete="off"
           />
         </div>
 
