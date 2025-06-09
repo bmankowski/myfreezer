@@ -52,7 +52,6 @@ export function createSupabaseServerClient(request: Request, astroContext?: { co
         return cookies[name];
       },
       set(name: string, value: string, options: CookieOptions) {
-
         // Use Astro's cookie API when available (preferred)
         if (astroContext?.cookies) {
           astroContext.cookies.set(name, value, options);
@@ -61,7 +60,6 @@ export function createSupabaseServerClient(request: Request, astroContext?: { co
         // This function doesn't directly set response headers
       },
       remove(name: string, options: CookieOptions) {
-
         // Use Astro's cookie API when available (preferred)
         if (astroContext?.cookies) {
           astroContext.cookies.delete(name, options);

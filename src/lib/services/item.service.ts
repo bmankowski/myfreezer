@@ -16,7 +16,7 @@ import type {
 } from "../../types.js";
 
 export class ItemService {
-  constructor(private supabase: SupabaseClient<Database, string, any>) {}
+  constructor(private supabase: SupabaseClient<Database>) {}
 
   /**
    * Search items with location information and pagination
@@ -31,10 +31,12 @@ export class ItemService {
         name,
         quantity,
         created_at,
+        shelf_id,
         shelves!inner (
           shelf_id,
           name,
           position,
+          container_id,
           containers!inner (
             container_id,
             name,
@@ -82,22 +84,27 @@ export class ItemService {
     }
 
     // Transform data to include location information
-    const items: ItemWithLocationDTO[] = data.map((item) => ({
-      item_id: item.item_id,
-      name: item.name,
-      quantity: item.quantity,
-      created_at: item.created_at,
-      shelf: {
-        shelf_id: item.shelves.shelf_id,
-        name: item.shelves.name,
-        position: item.shelves.position,
-      },
-      container: {
-        container_id: item.shelves.containers.container_id,
-        name: item.shelves.containers.name,
-        type: item.shelves.containers.type,
-      },
-    }));
+    const items: ItemWithLocationDTO[] = data.map((item) => {
+      const shelf = Array.isArray(item.shelves) ? item.shelves[0] : item.shelves;
+      const container = Array.isArray(shelf.containers) ? shelf.containers[0] : shelf.containers;
+
+      return {
+        item_id: item.item_id,
+        name: item.name,
+        quantity: item.quantity,
+        created_at: item.created_at,
+        shelf: {
+          shelf_id: shelf.shelf_id,
+          name: shelf.name,
+          position: shelf.position,
+        },
+        container: {
+          container_id: container.container_id,
+          name: container.name,
+          type: container.type,
+        },
+      };
+    });
 
     return {
       items,
