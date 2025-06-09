@@ -22,9 +22,10 @@ interface HeaderProps {
   onSearch: (query: string) => void;
   onContainerCreate: (data: CreateContainerCommandDTO) => Promise<void>;
   onToast: (message: string, type?: "success" | "error") => void;
+  onCommandSuccess?: () => void;
 }
 
-export function Header({ onSearch, onContainerCreate, onToast }: HeaderProps) {
+export function Header({ onSearch, onContainerCreate, onToast, onCommandSuccess }: HeaderProps) {
   const [isContainerDialogOpen, setIsContainerDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [name, setName] = useState("");
@@ -158,7 +159,7 @@ export function Header({ onSearch, onContainerCreate, onToast }: HeaderProps) {
 
         {/* Row 3: Command Input */}
         <div className="w-full">
-          <CommandInput onToast={onToast} />
+          <CommandInput onToast={onToast} onCommandSuccess={onCommandSuccess} />
         </div>
 
         {/* Row 4: Add Container Button */}
@@ -223,7 +224,7 @@ export function Header({ onSearch, onContainerCreate, onToast }: HeaderProps) {
 
         {/* Command Input - expands to fill available space */}
         <div className="flex-1 min-w-0">
-          <CommandInput onToast={onToast} />
+          <CommandInput onToast={onToast} onCommandSuccess={onCommandSuccess} />
         </div>
 
         {/* Add Container Button */}

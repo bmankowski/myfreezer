@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 
 interface CommandInputProps {
   onToast: (message: string, type?: "success" | "error") => void;
+  onCommandSuccess?: () => void;
 }
 
-export function CommandInput({ onToast }: CommandInputProps) {
+export function CommandInput({ onToast, onCommandSuccess }: CommandInputProps) {
   const [commandInput, setCommandInput] = useState("");
   const [isProcessingCommand, setIsProcessingCommand] = useState(false);
 
@@ -31,6 +32,9 @@ export function CommandInput({ onToast }: CommandInputProps) {
       if (response.ok) {
         onToast("Command processed successfully", "success");
         setCommandInput(""); // Clear input on success
+        if (onCommandSuccess) {
+          onCommandSuccess(); // Refresh containers
+        }
       } else {
         if (response.status === 401) {
           onToast("Authentication error. Please log in again.", "error");

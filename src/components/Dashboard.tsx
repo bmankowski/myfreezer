@@ -161,7 +161,12 @@ export function Dashboard() {
   if (isLoading && containers.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header onSearch={searchItems} onContainerCreate={createContainer} onToast={handleToast} />
+        <Header
+          onSearch={searchItems}
+          onContainerCreate={createContainer}
+          onToast={handleToast}
+          onCommandSuccess={refreshContainers}
+        />
 
         <main className="w-full sm:max-w-7xl sm:mx-auto px-3 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -176,7 +181,12 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onSearch={searchItems} onContainerCreate={createContainer} onToast={handleToast} />
+      <Header
+        onSearch={searchItems}
+        onContainerCreate={createContainer}
+        onToast={handleToast}
+        onCommandSuccess={refreshContainers}
+      />
 
       <main className="w-full sm:max-w-7xl sm:mx-auto px-3 sm:px-6 lg:px-8 py-8">
         <ContainerGrid
