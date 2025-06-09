@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClientWithCookies } from "../../../lib/auth/supabase-server.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // GET /api/auth/callback - Handle OAuth callback from Google
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
@@ -22,7 +22,7 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     console.log("🔄 Processing OAuth callback with code");
 
     // Create Supabase client with proper cookie handling via Astro
-    const supabase = createSupabaseServerClientWithCookies(request, { cookies });
+    const supabase = createSupabaseServerClient(request, { cookies });
 
     // Exchange code for session - this should work with the PKCE flow
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);

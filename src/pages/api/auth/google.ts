@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClientWithCookies } from "../../../lib/auth/supabase-server.js";
+import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // GET /api/auth/google - Initiate Google OAuth flow
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
@@ -7,27 +7,29 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     // Get the current URL to determine the correct callback URL
     const url = new URL(request.url);
 
-    // Prioritize configured site URL over dynamic URL detection
-    // This ensures consistent callback URLs in different environments
-    const siteUrl = import.meta.env.SITE_URL || import.meta.env.PUBLIC_SITE_URL;
-    const origin = siteUrl || url.origin;
+    // Force localhost for development environment
+    const isDevelopment = import.meta.env.DEV || url.hostname === "localhost";
+    const origin = isDevelopment
+      ? "http://localhost:3000"
+      : import.meta.env.SITE_URL || import.meta.env.PUBLIC_SITE_URL || url.origin;
     const callbackUrl = `${origin}/api/auth/callback`;
 
     console.log("🔗 Initiating Google OAuth with callback:", callbackUrl);
     console.log("🌐 Origin sources:", {
-      siteUrl,
+      isDevelopment,
       requestOrigin: url.origin,
       finalOrigin: origin,
     });
 
     // Create Supabase server client with Astro cookies integration
-    const supabase = createSupabaseServerClientWithCookies(request, { cookies });
+    const supabase = createSupabaseServerClient(request, { cookies });
 
     // Initiate OAuth flow with Google
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: callbackUrl,
+        scopes: "email profile",
         queryParams: {
           access_type: "offline",
           prompt: "consent",

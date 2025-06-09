@@ -5,7 +5,7 @@ import { createErrorResponse } from "../../../lib/auth.utils.js";
 import { createSupabaseServerClient } from "../../../lib/auth/supabase-server.js";
 
 // POST /api/auth/login - Sign in user
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     // Parse request body
     let body: unknown;
@@ -24,21 +24,29 @@ export const POST: APIRoute = async ({ request }) => {
 
     const command = validationResult.data;
 
-    // Create response headers for cookie setting
-    const responseHeaders = new Headers();
-
-    // Login user using service with server client
-    const supabase = createSupabaseServerClient(request, responseHeaders);
+    // Login user using service with server client and set cookies
+    const supabase = createSupabaseServerClient(request, { cookies });
     const authService = new AuthService(supabase);
     const result = await authService.login(command);
 
-    // Set the session in the Supabase client (this will handle cookies automatically)
-    await supabase.auth.setSession({
-      access_token: result.session.access_token,
-      refresh_token: result.session.refresh_token,
+    // Set HTTP-only cookies for session persistence
+    cookies.set("sb-access-token", result.session.access_token, {
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: "lax",
+      maxAge: 60 * 60, // 1 hour
+      path: "/",
     });
 
-    // Return user data with proper cookie headers
+    cookies.set("sb-refresh-token", result.session.refresh_token, {
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: "/",
+    });
+
+    // Return user data without exposing session tokens in response
     return new Response(
       JSON.stringify({
         user: result.user,
@@ -48,7 +56,6 @@ export const POST: APIRoute = async ({ request }) => {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          ...Object.fromEntries(responseHeaders.entries()),
         },
       }
     );

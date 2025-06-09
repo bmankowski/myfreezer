@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Request password reset using service
     const supabase = createSupabaseServerClient(request);
     const authService = new AuthService(supabase);
-    const result = await authService.resetPassword(command);
+    const result = await authService.requestPasswordReset(command);
 
     return createSuccessResponse(result);
   } catch (error) {

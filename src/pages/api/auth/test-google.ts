@@ -8,8 +8,7 @@ export const GET: APIRoute = async ({ request }) => {
     console.log("🧪 Testing Google OAuth configuration");
 
     // Create Supabase server client
-    const responseHeaders = new Headers();
-    const supabase = createSupabaseServerClient(request, responseHeaders);
+    const supabase = createSupabaseServerClient(request);
 
     // Check environment variables
     const hasGoogleClientId = !!import.meta.env.GOOGLE_CLIENT_ID;
